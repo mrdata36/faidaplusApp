@@ -161,8 +161,8 @@ const Dashboard = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 10, right: 10, left: -8, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={chartTheme.grid} />
-                  <XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fill: chartTheme.axis }} axisLine={{ stroke: chartTheme.axis }} />
-                  <YAxis tickLine={false} axisLine={false} tick={{ fill: chartTheme.axis }} axisLine={{ stroke: chartTheme.axis }} />
+                  <XAxis dataKey="date" tickLine={false} tick={{ fill: chartTheme.axis }} axisLine={{ stroke: chartTheme.axis }} />
+                  <YAxis tickLine={false} tick={{ fill: chartTheme.axis }} axisLine={{ stroke: chartTheme.axis }} />
                   <Tooltip
                     formatter={(value) => formatCurrency(value)}
                     contentStyle={{ backgroundColor: chartTheme.tooltipBg, borderColor: chartTheme.grid, color: chartTheme.tooltipText }}
