@@ -1,0 +1,8 @@
+{
+  "name": "FaidaPlus",
+  "description": "A comprehensive employee benefits and business management platform, providing analytics, transactions, products, and reporting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
