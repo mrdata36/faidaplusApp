@@ -1,8 +1,22 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import crypto from 'node:crypto'
+
+// Polyfill global.crypto and globalThis.crypto for Node.js environments
+const webCrypto = crypto.webcrypto || crypto;
+if (typeof global !== 'undefined' && !global.crypto) {
+  global.crypto = webCrypto;
+}
+if (typeof globalThis !== 'undefined' && !globalThis.crypto) {
+  globalThis.crypto = webCrypto;
+}
 
 export default defineConfig({
+  define: {
+    // Some libraries expect 'global' to be defined in browser/build environments
+    global: {},
+  },
   plugins: [
     react(),
     VitePWA({
