@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
+import { motion, AnimatePresence } from 'motion/react';
 import { PlusCircle, ShoppingCart, Edit, Trash2, DollarSign, X, Package, AlertTriangle, CheckCircle } from 'lucide-react';
 import Layout from '../components/Layout';
+import ConfirmDialog from '../components/ConfirmDialog';
 import { formatCurrency } from '../utils/format';
 import { useDataSync } from '../context/DataSyncContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -18,6 +20,8 @@ const Products = () => {
   const [form, setForm] = useState({ product_name: '', category: 'Food', buying_price: '', selling_price: '', quantity: 0, low_stock_threshold: 5 });
   const [saleForm, setSaleForm] = useState({ quantity_sold: 1 });
   const [error, setError] = useState('');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState({ title: '', message: '', onConfirm: () => {} });
   const { notifyDataChange } = useDataSync();
   const { notifyNewNotification } = useNotifications();
   const { t } = useLanguage();
@@ -111,15 +115,22 @@ const Products = () => {
     }
   };
 
-  const deleteProduct = async (id) => {
-    if (!window.confirm(t('delete') + '?')) return;
-    try {
-      await axios.delete(`/api/products/${id}`);
-      await fetchProducts();
-      notifyDataChange();
-    } catch (err) {
-      console.error(err);
-    }
+  const deleteProduct = (id) => {
+    setConfirmConfig({
+      title: t('confirm_delete_title') || 'Confirm Deletion',
+      message: t('confirm_delete_msg') || 'Are you absolutely sure you want to delete this item? This action is irreversible.',
+      onConfirm: async () => {
+        setConfirmOpen(false);
+        try {
+          await axios.delete(`/api/products/${id}`);
+          await fetchProducts();
+          notifyDataChange();
+        } catch (err) {
+          console.error(err);
+        }
+      }
+    });
+    setConfirmOpen(true);
   };
 
   const getStockStatus = (product) => {
@@ -130,8 +141,8 @@ const Products = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-8">
+      <div className="space-y-6">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between mb-2">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-brand-battery rounded-xl flex items-center justify-center">
               <Package className="w-6 h-6 text-white" />
@@ -147,7 +158,7 @@ const Products = () => {
           </div>
           <button
             onClick={() => openProductModal()}
-            className="flex items-center gap-2 bg-brand-bluecola text-white px-6 py-3 rounded-lg hover:bg-brand-trueblue transition-colors shadow-sm"
+            className="flex items-center justify-center gap-2 bg-brand-bluecola text-white px-6 py-3 rounded-xl hover:bg-brand-trueblue transition-all shadow-sm font-semibold cursor-pointer"
           >
             <PlusCircle className="w-5 h-5" />
             {t('add_product')}
@@ -219,29 +230,29 @@ const Products = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3 lg:flex-col lg:items-end">
-                      <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-3 lg:flex-col lg:items-end w-full lg:w-auto">
+                      <div className="grid grid-cols-3 sm:flex sm:flex-row gap-2 w-full lg:w-auto">
                         <button
                           onClick={() => openSaleModal(product)}
                           disabled={product.quantity === 0}
-                          className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-xs sm:text-sm font-semibold shadow"
                         >
-                          <ShoppingCart className="w-4 h-4" />
-                          {t('sell')}
+                          <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{t('sell')}</span>
                         </button>
                         <button
                           onClick={() => openProductModal(product)}
-                          className="flex items-center gap-2 bg-brand-battery text-white px-4 py-2 rounded-lg hover:bg-brand-trueblue transition-colors cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 bg-brand-battery text-white px-3 py-2 rounded-lg hover:bg-brand-trueblue transition-colors cursor-pointer text-xs sm:text-sm font-semibold shadow"
                         >
-                          <Edit className="w-4 h-4" />
-                          {t('edit')}
+                          <Edit className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{t('edit')}</span>
                         </button>
                         <button
                           onClick={() => deleteProduct(product.id)}
-                          className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer"
+                          className="flex items-center justify-center gap-1.5 bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition-colors cursor-pointer text-xs sm:text-sm font-semibold shadow"
                         >
-                          <Trash2 className="w-4 h-4" />
-                          {t('delete')}
+                          <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{t('delete')}</span>
                         </button>
                       </div>
                     </div>
@@ -253,198 +264,137 @@ const Products = () => {
         )}
 
         {/* Product Modal */}
-        {modalOpen && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {selectedProduct ? t('edit_product_title') : t('new_product_title')}
-                  </h2>
-                  <button
-                    onClick={() => setModalOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-
-              <form onSubmit={saveProduct} className="p-6 space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                    {t('product_name')}
-                  </label>
-                  <input
-                    name="product_name"
-                    type="text"
-                    value={form.product_name}
-                    onChange={handleProductChange}
-                    placeholder="Enter product name"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      {t('category')}
-                    </label>
-                    <select
-                      name="category"
-                      value={form.category}
-                      onChange={handleProductChange}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
-                      required
+        <AnimatePresence>
+          {modalOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setModalOpen(false)}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10 border border-slate-100 dark:border-slate-700/80"
+              >
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                      {selectedProduct ? t('edit_product_title') : t('new_product_title')}
+                    </h2>
+                    <button
+                      onClick={() => setModalOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                     >
-                      {productCategories.map((category) => (
-                        <option key={category} value={category}>{t(category)}</option>
-                      ))}
-                    </select>
+                      <X className="w-6 h-6" />
+                    </button>
                   </div>
+                </div>
+
+                <form onSubmit={saveProduct} className="p-6 space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      {t('stock_quantity')}
+                      {t('product_name')}
                     </label>
                     <input
-                      name="quantity"
+                      name="product_name"
+                      type="text"
+                      value={form.product_name}
+                      onChange={handleProductChange}
+                      placeholder="Enter product name"
+                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                        {t('category')}
+                      </label>
+                      <select
+                        name="category"
+                        value={form.category}
+                        onChange={handleProductChange}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        required
+                      >
+                        {productCategories.map((category) => (
+                          <option key={category} value={category}>{t(category)}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                        {t('stock_quantity')}
+                      </label>
+                      <input
+                        name="quantity"
+                        type="number"
+                        min="0"
+                        value={form.quantity}
+                        onChange={handleProductChange}
+                        placeholder="0"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                        {t('cost_price')}
+                      </label>
+                      <input
+                        name="buying_price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.buying_price}
+                        onChange={handleProductChange}
+                        placeholder="0.00"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                        {t('selling_price')}
+                      </label>
+                      <input
+                        name="selling_price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.selling_price}
+                        onChange={handleProductChange}
+                        placeholder="0.00"
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                      {t('low_stock_threshold')}
+                    </label>
+                    <input
+                      name="low_stock_threshold"
                       type="number"
                       min="0"
-                      value={form.quantity}
+                      value={form.low_stock_threshold}
                       onChange={handleProductChange}
-                      placeholder="0"
+                      placeholder="5"
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
                       required
                     />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      {t('cost_price')}
-                    </label>
-                    <input
-                      name="buying_price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.buying_price}
-                      onChange={handleProductChange}
-                      placeholder="0.00"
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      {t('selling_price')}
-                    </label>
-                    <input
-                      name="selling_price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={form.selling_price}
-                      onChange={handleProductChange}
-                      placeholder="0.00"
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                    {t('low_stock_threshold')}
-                  </label>
-                  <input
-                    name="low_stock_threshold"
-                    type="number"
-                    min="0"
-                    value={form.low_stock_threshold}
-                    onChange={handleProductChange}
-                    placeholder="5"
-                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                {error && (
-                  <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(false)}
-                    className="px-6 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    {t('cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-6 py-2 rounded-lg bg-brand-bluecola text-white hover:bg-brand-trueblue transition-colors"
-                  >
-                    {selectedProduct ? t('update_profile') || 'Update' : t('save')}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* Sale Modal */}
-        {saleOpen && selectedProduct && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md">
-              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                    {t('record_sale')}
-                  </h2>
-                  <button
-                    onClick={() => setSaleOpen(false)}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">{t('product_name')}</p>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100 mb-2">{selectedProduct.product_name}</p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {t('unit_price')}: {formatCurrency(selectedProduct.selling_price)}
-                  </p>
-                </div>
-
-                <form onSubmit={sellProduct} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                      {t('quantity_to_sell')}
-                    </label>
-                    <input
-                      name="quantity_sold"
-                      type="number"
-                      min="1"
-                      max={selectedProduct.quantity}
-                      value={saleForm.quantity_sold}
-                      onChange={handleSaleChange}
-                      className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
-                      required
-                    />
-                  </div>
-
-                  <div className="p-3 bg-brand-picton/10 border border-brand-picton/20 rounded-lg">
-                    <p className="text-sm text-brand-bluecola font-medium">
-                      Total: {formatCurrency(selectedProduct.selling_price * saleForm.quantity_sold)}
-                    </p>
                   </div>
 
                   {error && (
@@ -453,27 +403,127 @@ const Products = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-3 pt-4">
+                  <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
                     <button
                       type="button"
-                      onClick={() => setSaleOpen(false)}
+                      onClick={() => setModalOpen(false)}
                       className="px-6 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
                       {t('cancel')}
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer"
+                      className="px-6 py-2 rounded-lg bg-brand-bluecola text-white hover:bg-brand-trueblue transition-colors"
                     >
-                      {t('record_sale')}
+                      {selectedProduct ? t('update_profile') || 'Update' : t('save')}
                     </button>
                   </div>
                 </form>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
+
+        {/* Sale Modal */}
+        <AnimatePresence>
+          {saleOpen && selectedProduct && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setSaleOpen(false)}
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                transition={{ type: "spring", damping: 25, stiffness: 350 }}
+                className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md z-10 overflow-hidden border border-slate-100 dark:border-slate-700/80"
+              >
+                <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                      {t('record_sale')}
+                    </h2>
+                    <button
+                      onClick={() => setSaleOpen(false)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-6">
+                  <div className="mb-6 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">{t('product_name')}</p>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100 mb-2">{selectedProduct.product_name}</p>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      {t('unit_price')}: {formatCurrency(selectedProduct.selling_price)}
+                    </p>
+                  </div>
+
+                  <form onSubmit={sellProduct} className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                        {t('quantity_to_sell')}
+                      </label>
+                      <input
+                        name="quantity_sold"
+                        type="number"
+                        min="1"
+                        max={selectedProduct.quantity}
+                        value={saleForm.quantity_sold}
+                        onChange={handleSaleChange}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        required
+                      />
+                    </div>
+
+                    <div className="p-3 bg-brand-picton/10 border border-brand-picton/20 rounded-lg">
+                      <p className="text-sm text-brand-bluecola font-medium">
+                        Total: {formatCurrency(selectedProduct.selling_price * saleForm.quantity_sold)}
+                      </p>
+                    </div>
+
+                    {error && (
+                      <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm">
+                        {error}
+                      </div>
+                    )}
+
+                    <div className="flex justify-end gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setSaleOpen(false)}
+                        className="px-6 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                      >
+                        {t('cancel')}
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-6 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors cursor-pointer"
+                      >
+                        {t('record_sale')}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </div>
+      <ConfirmDialog
+        isOpen={confirmOpen}
+        title={confirmConfig.title}
+        message={confirmConfig.message}
+        onConfirm={confirmConfig.onConfirm}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </Layout>
   );
 };

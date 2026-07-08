@@ -16,7 +16,7 @@ const db = new sqlite3.Database(dbPath);
 db.run('PRAGMA foreign_keys = ON');
 
 // Initialize database with schema
-const schemaPath = path.join(dbDir, 'schema.sql');
+const schemaPath = path.join(__dirname, 'schema.sql');
 const schema = fs.readFileSync(schemaPath, 'utf8');
 
 // Run schema initialization

@@ -1,13 +1,14 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 
 // Initialize database
 require('./db/database');
 
 const app = express();
-const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 3000) : (process.env.PORT || 5000);
+const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 3000) : 5000;
 
 // Middleware
 const corsOptions = {

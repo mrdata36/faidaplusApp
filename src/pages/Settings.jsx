@@ -586,8 +586,8 @@ const Settings = () => {
 
   return (
     <Layout>
-      <div className="max-w-6xl mx-auto p-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-8">
+      <div className="space-y-6 max-w-6xl mx-auto">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
           <div>
             <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-slate-100">
               {t('settings_hub')}
@@ -603,30 +603,30 @@ const Settings = () => {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-bluecola"></div>
           </div>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
+          <div className="grid gap-8 lg:grid-cols-[250px_1fr]">
             {/* Sidebar Navigation */}
-            <div className="space-y-2">
+            <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-3 lg:pb-0 scrollbar-none snap-x shrink-0">
               {sections.map((section) => {
                 const Icon = section.icon;
                 return (
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition cursor-pointer ${
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left transition cursor-pointer shrink-0 snap-start whitespace-nowrap ${
                       activeSection === section.id
                         ? 'bg-brand-bluecola text-white shadow-lg'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        : 'text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/50 border border-slate-200/60 dark:border-slate-700/60 lg:border-none'
                     }`}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{section.label}</span>
+                    <Icon className="w-5 h-5 shrink-0" />
+                    <span className="font-semibold text-sm sm:text-base">{section.label}</span>
                   </button>
                 );
               })}
             </div>
 
             {/* Main Content */}
-            <div className="min-h-[600px]">
+            <div className="min-h-[500px]">
               {renderSection()}
             </div>
           </div>
@@ -634,7 +634,7 @@ const Settings = () => {
 
         {/* Global Messages */}
         {(message || error) && (
-          <div className={`fixed bottom-4 right-4 p-4 rounded-lg shadow-lg max-w-sm z-50 ${
+          <div className={`fixed bottom-4 right-4 p-4 rounded-xl shadow-lg max-w-sm z-50 ${
             error
               ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
               : 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'

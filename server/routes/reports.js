@@ -57,7 +57,31 @@ function getReportData(userId, startDate, endDate, callback) {
             (catErr, categories) => {
               if (catErr) return callback(catErr);
               data.categories = categories || [];
-              callback(null, data);
+
+              // Fetch Cash Balance (accumulated up to endDate)
+              db.get(
+                `SELECT COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE -amount END), 0) AS cashBalance
+                 FROM transactions
+                 WHERE user_id = ? AND date <= ?`,
+                [userId, endDate],
+                (cashErr, cashRow) => {
+                  if (cashErr) return callback(cashErr);
+                  data.cashBalance = cashRow ? cashRow.cashBalance : 0;
+
+                  // Fetch Inventory asset value
+                  db.get(
+                    `SELECT COALESCE(SUM(buying_price * quantity), 0) AS inventoryValue
+                     FROM products
+                     WHERE user_id = ?`,
+                    [userId],
+                    (prodErr, prodRow) => {
+                      if (prodErr) return callback(prodErr);
+                      data.inventoryValue = prodRow ? prodRow.inventoryValue : 0;
+                      callback(null, data);
+                    }
+                  );
+                }
+              );
             }
           );
         }

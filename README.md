@@ -1,209 +1,107 @@
 # FaidaPlus - Business Management System
 
-A comprehensive business management system for small and medium enterprises in East Africa, built with React and Node.js.
+FaidaPlus ni mfumo madhubuti wa usimamizi wa biashara ndogo na za kati (SMEs) nchini Afrika Mashariki, ulioundwa kwa kutumia **React 19 (Vite)** na **Node.js (Express) na SQLite**.
 
-## Features
+---
 
-- **Authentication**: Secure user registration and login
-- **Dashboard**: Business overview with key metrics
-- **Transaction Management**: Track income and expenses
-- **Product Management**: Manage inventory and sales
-- **Reports**: Generate financial reports
-- **Notifications**: Smart alerts for business insights
-- **Responsive Design**: Optimized for mobile, tablet, and desktop
-- **PWA Support**: Installable web app with offline capabilities
+## 📌 Jinsi ya Kuiendesha Kwenye Kompyuta Yako (Local Setup Guide)
 
-## Tech Stack
+Maudhui na muundo wa mfumo huu umepangwa kwa urahisi sana. Mteja (Frontend) yupo kwenye mzizi wa mradi (root folder), na huduma ya nyuma (Backend Server) ipo ndani ya folda la `/server`.
 
-### Frontend
-- React 19 with Vite
-- Tailwind CSS for styling
-- React Router for navigation
-- Axios for API calls
-- React Toastify for notifications
-- Lucide React for icons
-- Vite PWA plugin for progressive web app
+Huna haja ya kwenda kwenye folda tofauti tofauti kufanya `npm install` na kuanzisha servers mbili tofauti! Unaweza kufanya kila kitu kutoka kwenye mzizi wa mradi kwa urahisi sana.
 
-### Backend
-- Node.js with Express
-- SQLite database
-- JWT authentication
-- bcryptjs for password hashing
-- node-cron for scheduled tasks
+### Hatua ya 1: Pakua au Clone Mradi
+Hakikisha umepakua ZIP ya mradi huu kutoka AI Studio au umefanya clone kutoka GitHub kwenda kwenye kompyuta yako:
+```bash
+git clone <your-github-repo-url>
+cd faidaplus
+```
 
-## Getting Started
+### Hatua ya 2: Weka Mafaili ya Mazingira (.env)
+1. Kwenye **mzizi wa mradi (root directory)**, nakili faili la `.env.example` na ulizipe jina jipya la `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Kwenye folda la **`/server`**, nakili faili la `.env.example` na ulipe jina la `.env`:
+   ```bash
+   cp server/.env.example server/.env
+   ```
+*(Unaweza kufungua mafaili haya ya `.env` na kubadilisha siri kama `JWT_SECRET` au `PORT` kama utapenda).*
 
-### Prerequisites
-- Node.js (v16 or higher)
-- npm or yarn
+### Hatua ya 3: Weka Maktaba Zote (Install Dependencies)
+Kutoka kwenye **mzizi wa mradi (root directory)**, endesha amri ifuatayo ili kuweka maktaba zote za Frontend na Backend kwa pamoja:
+```bash
+npm install
+```
 
-### Installation
+### Hatua ya 4: Washa Mfumo (Run Development Server)
+Ili kuwasha mteja (React/Vite) na server (Express/SQLite) kwa wakati mmoja, endesha amri hii kwenye **mzizi wa mradi (root directory)**:
+```bash
+npm run dev
+```
 
-1. **Clone the repository**
+Mfumo utajiwasha wenyewe kwa kutumia `concurrently`:
+* **Frontend (Mteja)** itakuwa inapatikana kwenye: **[http://localhost:3000](http://localhost:3000)**
+* **Backend API** itakuwa inajiwasha kwenye port `5000` (na itatengeneza database ya SQLite `faidaplus.db` kiotomatiki kama haipo).
+* Maombi yote ya `/api` kutoka kwenye mteja yataelekezwa (proxied) kwenda kwenye server ya Express kiotomatiki.
+
+---
+
+## 📂 Muundo wa Mradi (Project Structure)
+
+```
+faidaplus/
+├── src/                    # React Frontend (Mteja)
+│   ├── components/         # Vipengele vinavyotumika mara kwa mara (Layout, Dialogs)
+│   ├── pages/              # Kurasa kuu (Dashboard, Transactions, Reports, nk)
+│   ├── context/            # Lugha (Swahili/English), Theme, Auth, na Data Sync
+│   ├── utils/              # Zana za usaidizi (Formatting, nk)
+│   ├── App.jsx             # Njia na mpangilio mkuu wa React
+│   └── main.jsx            # Mahali pa kuanzia React
+├── server/                 # Node.js Backend Server
+│   ├── db/                 # Uhusiano na SQLite na schema (`schema.sql`)
+│   ├── routes/             # Njia zote za API za mfumo (Auth, Transactions, nk)
+│   ├── controllers/        # Mantiki ya kila njia ya API
+│   ├── middleware/         # Ulinzi na uthibitisho wa watumiaji (Auth Middleware)
+│   ├── cron/               # Kazi zinazojiendesha zenyewe kwa muda maalum (Alerts)
+│   └── server.js           # Faili kuu la kuanzisha server ya Express
+├── package.json            # Scripts na dependencies zote za mradi
+└── README.md               # Mwongozo huu wa matumizi
+```
+
+---
+
+## 🚀 Uendeshaji wa Uzalishaji (Production Deployment)
+
+Ikiwa unataka kuiweka kwenye server halisi au uzalishaji:
+
+1. **Jenga Faili za Tuli za Frontend (Build Client):**
+   ```bash
+   npm run build
+   ```
+   Hii itatengeneza folda la `/dist` lenye faili zote zilizoboreshwa.
+
+2. **Washa Server ya Uzalishaji:**
+   Hakikisha kuwa folda la `server/.env` lina `NODE_ENV=production`. Kisha washa server:
+   ```bash
+   npm start
+   ```
+   Katika mazingira ya uzalishaji (`production`), server ya Express itahudumia faili zote tuli za mteja kutoka folda la `/dist` na kutoa API zote kutoka kwenye port moja (`3000`), jambo linalofanya iwe thabiti na salama sana!
+
+---
+
+## English Quick Start
+
+1. **Clone & Navigate**:
    ```bash
    git clone <repository-url>
    cd faidaplus
    ```
-
-2. **Backend Setup**
-   ```bash
-   cd server
-   npm install
-   cp .env.example .env
-   # Edit .env with your configuration
-   npm run dev  # For development
-   ```
-
-3. **Frontend Setup**
-   ```bash
-   cd ../client
-   npm install
-   npm run dev  # For development
-   ```
-
-## Production Deployment
-
-### Environment Configuration
-
-1. **Backend Environment**
-   - Copy `server/.env.example` to `server/.env`
-   - Set `NODE_ENV=production`
-   - Configure `JWT_SECRET` with a strong secret
-   - Set `CORS_ORIGINS` to your frontend domain(s)
-
-2. **Build Frontend**
-   ```bash
-   cd client
-   npm run build
-   ```
-
-3. **Serve Production**
-   - Backend: `cd server && npm run start:prod`
-   - Frontend: Serve `client/dist` with any static server (nginx, Apache, etc.)
-
-### Docker Deployment (Optional)
-
-Create `Dockerfile` and `docker-compose.yml` for containerized deployment.
-
-### PM2 Deployment (Recommended for Node.js)
-
-```bash
-npm install -g pm2
-cd server
-pm2 start server.js --name faidaplus-api
-```
-
-## API Documentation
-
-### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user
-
-### Protected Routes (require JWT token)
-- `GET /api/dashboard` - Dashboard data
-- `GET/POST/PUT/DELETE /api/transactions` - Transaction management
-- `GET/POST/PUT/DELETE /api/products` - Product management
-- `GET/POST/PUT/DELETE /api/notifications` - Notification management
-- `GET /api/reports` - Financial reports
-- `PUT /api/settings/profile` - Update profile
-- `PUT /api/settings/password` - Change password
-
-## Security Features
-
-- JWT token-based authentication
-- Password hashing with bcryptjs
-- CORS protection
-- Input validation with express-validator
-- SQL injection protection via parameterized queries
-
-## Performance Optimizations
-
-- Code splitting with React.lazy
-- Service worker for caching
-- Optimized bundle sizes
-- Efficient database queries
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
-
-## License
-
-ISC License
-   ```bash
-   cd ../client
-   npm install --legacy-peer-deps
-   ```
-
-4. **Start the backend server**
-   ```bash
-   cd ../server
-   npm run dev
-   ```
-   The server will run on http://localhost:5000
-
-5. **Start the frontend development server**
-   ```bash
-   cd ../client
-   npm run dev
-   ```
-   The app will be available at http://localhost:5173
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/me` - Get current user info
-
-### Dashboard
-- `GET /api/dashboard/summary` - Get business summary
-- `GET /api/dashboard/chart` - Get chart data
-- `GET /api/dashboard/pie` - Get expense categories
-
-## Database Schema
-
-The application uses SQLite with the following main tables:
-- `users` - User accounts
-- `transactions` - Income and expense records
-- `products` - Product inventory
-- `sales` - Sales transactions
-- `notifications` - System notifications
-
-## Project Structure
-
-```
-faidaplus/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── components/     # Reusable components
-│   │   ├── pages/         # Page components
-│   │   ├── context/       # React context
-│   │   ├── hooks/         # Custom hooks
-│   │   └── utils/         # Utility functions
-├── server/                 # Node.js backend
-│   ├── routes/            # API routes
-│   ├── controllers/       # Route handlers
-│   ├── middleware/        # Express middleware
-│   ├── db/               # Database setup
-│   └── cron/             # Scheduled jobs
-└── README.md
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the ISC License.
-# faidaplus
+2. **Environment Variables**:
+   Copy `.env.example` to `.env` at the root, and `server/.env.example` to `server/.env`.
+3. **Install Dependencies**:
+   Run `npm install` at the root.
+4. **Run Dev Server**:
+   Run `npm run dev` at the root. Access the app at **[http://localhost:3000](http://localhost:3000)**.
+5. **Build for Production**:
+   Run `npm run build` to compile the React assets, and then `npm start` to run the Express production server.

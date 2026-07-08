@@ -13,6 +13,7 @@ import {
   Legend,
 } from 'recharts';
 import axios from 'axios';
+import { motion } from 'motion/react';
 import { TrendingUp, TrendingDown, DollarSign, Package } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useDataSync } from '../context/DataSyncContext';
@@ -201,13 +202,18 @@ const Dashboard = () => {
 
         <div className="grid gap-6 xl:grid-cols-3">
           {insights.map((insight) => (
-            <div key={insight.title} className="card p-6">
+            <motion.div 
+              key={insight.title} 
+              whileHover={{ y: -4, scale: 1.01 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="card p-6 border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+            >
               <div className="flex items-center justify-between gap-3 mb-4">
                 <h3 className="text-base font-semibold text-slate-950 dark:text-white">{insight.title}</h3>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${insight.accent}`}>{insight.badge}</span>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold ${insight.accent}`}>{insight.badge}</span>
               </div>
-              <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">{insight.description}</p>
-            </div>
+              <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">{insight.description}</p>
+            </motion.div>
           ))}
         </div>
 
@@ -226,31 +232,62 @@ const Dashboard = () => {
               {t('no_transactions_yet')}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full text-left text-sm text-slate-900 dark:text-slate-200">
-                <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                  <tr>
-                    <th className="px-4 py-3">{t('date')}</th>
-                    <th className="px-4 py-3">{t('description')}</th>
-                    <th className="px-4 py-3">{t('category')}</th>
-                    <th className="px-4 py-3">{t('amount')}</th>
-                    <th className="px-4 py-3">{t('type')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentTransactions.map((transaction) => (
-                    <tr key={transaction.id} className="border-b border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900">
-                      <td className="px-4 py-3">{transaction.date}</td>
-                      <td className="px-4 py-3">{transaction.description || '—'}</td>
-                      <td className="px-4 py-3">{transaction.category}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-950 dark:text-white">{formatCurrency(transaction.amount)}</td>
-                      <td className="px-4 py-3 uppercase text-xs tracking-[0.16em] text-slate-500 dark:text-slate-400">
-                        {transaction.type === 'income' ? t('income') : t('expense')}
-                      </td>
+            <div>
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="min-w-full text-left text-sm text-slate-900 dark:text-slate-200">
+                  <thead className="border-b border-slate-200 text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                    <tr>
+                      <th className="px-4 py-3">{t('date')}</th>
+                      <th className="px-4 py-3">{t('description')}</th>
+                      <th className="px-4 py-3">{t('category')}</th>
+                      <th className="px-4 py-3">{t('amount')}</th>
+                      <th className="px-4 py-3">{t('type')}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {recentTransactions.map((transaction) => (
+                      <tr key={transaction.id} className="border-b border-slate-200 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900">
+                        <td className="px-4 py-3">{transaction.date}</td>
+                        <td className="px-4 py-3">{transaction.description || '—'}</td>
+                        <td className="px-4 py-3">{transaction.category}</td>
+                        <td className="px-4 py-3 font-semibold text-slate-950 dark:text-white">{formatCurrency(transaction.amount)}</td>
+                        <td className="px-4 py-3 uppercase text-xs tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                          {transaction.type === 'income' ? t('income') : t('expense')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Stacked Card View */}
+              <div className="block md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+                {recentTransactions.map((transaction) => (
+                  <div key={transaction.id} className="py-3.5 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {transaction.description || '—'}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span>{transaction.date}</span>
+                        <span>•</span>
+                        <span>{transaction.category}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className={`text-sm font-bold ${
+                        transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </p>
+                      <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+                        {transaction.type === 'income' ? t('income') : t('expense')}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -260,17 +297,21 @@ const Dashboard = () => {
 };
 
 const StatCard = ({ label, value, icon, highlight }) => (
-  <div className="card p-6">
+  <motion.div 
+    whileHover={{ y: -5, scale: 1.02 }}
+    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    className="card p-6 border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md"
+  >
     <div className="flex items-center justify-between gap-4">
       <div>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{label}</p>
-        <p className="mt-2 text-2xl font-semibold text-slate-950 dark:text-white">{value}</p>
+        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+        <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white tracking-tight">{value}</p>
       </div>
-      <div className={`rounded-2xl px-3 py-3 text-sm font-semibold ${highlight}`}>
+      <div className={`rounded-2xl p-3 flex items-center justify-center ${highlight}`}>
         {icon}
       </div>
     </div>
-  </div>
+  </motion.div>
 );
 
 export default Dashboard;

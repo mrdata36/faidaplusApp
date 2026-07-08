@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   Home,
   CreditCard,
@@ -43,7 +44,7 @@ const Layout = ({ children }) => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex transition-colors duration-300">
       
       {/* DESKTOP PERSISTENT SIDEBAR */}
-      <aside className="hidden lg:flex flex-col w-64 sidebar-bg sidebar-border border-r shrink-0 h-screen sticky top-0 z-20">
+      <aside className="hidden lg:flex flex-col w-64 sidebar-bg sidebar-border border-r shrink-0 h-screen sticky top-0 z-20 print:hidden">
         {/* Brand / Logo Header */}
         <div className="p-6 sidebar-border border-b flex items-center gap-3">
           <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center shrink-0 shadow-md shadow-blue-600/20">
@@ -112,7 +113,7 @@ const Layout = ({ children }) => {
       <div className="flex-1 flex flex-col min-w-0">
         
         {/* TOP NAVBAR (sticky on desktop and mobile) */}
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm transition-colors duration-300 sticky top-0 z-10">
+        <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm transition-colors duration-300 sticky top-0 z-10 print:hidden">
           <div className="flex items-center gap-3">
             {/* Mobile Menu Toggle */}
             <button
@@ -168,8 +169,19 @@ const Layout = ({ children }) => {
 
         {/* PAGE DYNAMIC CONTENT CONTAINER */}
         <main className="flex-1 overflow-y-auto">
-          <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
-            {children}
+          <div className="max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 overflow-visible">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.22, ease: [0.25, 1, 0.5, 1] }}
+                className="w-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>
@@ -183,7 +195,7 @@ const Layout = ({ children }) => {
       )}
 
       <div
-        className={`fixed left-0 top-0 z-50 h-full w-72 overflow-y-auto bg-slate-950 text-white shadow-2xl transition-transform duration-300 lg:hidden ${
+        className={`fixed left-0 top-0 z-50 h-full w-72 overflow-y-auto sidebar-bg text-white shadow-2xl transition-transform duration-300 lg:hidden ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

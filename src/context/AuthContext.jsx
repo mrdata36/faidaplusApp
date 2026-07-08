@@ -28,7 +28,11 @@ export const AuthProvider = ({ children }) => {
       const res = await axios.get('/api/auth/me');
       setUser(res.data.user || res.data);
     } catch (err) {
-      console.error('Error fetching user:', err);
+      if (err.response?.status !== 401 && err.response?.status !== 404) {
+        console.error('Error fetching user:', err);
+      } else {
+        console.warn('Session expired or user not found');
+      }
       logout();
     } finally {
       setLoading(false);

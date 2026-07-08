@@ -126,15 +126,24 @@ router.delete('/:id', (req, res) => {
   const userId = req.userId;
   const { id } = req.params;
 
-  db.run('DELETE FROM products WHERE id = ? AND user_id = ?', [id, userId], function (err) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Server error' });
-    }
-    if (this.changes === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.status(204).end();
+  db.serialize(() => {
+    db.run('DELETE FROM sales WHERE product_id = ? AND user_id = ?', [id, userId], (err) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Server error' });
+      }
+
+      db.run('DELETE FROM products WHERE id = ? AND user_id = ?', [id, userId], function (err2) {
+        if (err2) {
+          console.error(err2);
+          return res.status(500).json({ error: 'Server error' });
+        }
+        if (this.changes === 0) {
+          return res.status(404).json({ error: 'Product not found' });
+        }
+        res.status(204).end();
+      });
+    });
   });
 });
 
