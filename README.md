@@ -29,9 +29,11 @@ cd faidaplus
 *(Unaweza kufungua mafaili haya ya `.env` na kubadilisha siri kama `JWT_SECRET` au `PORT` kama utapenda).*
 
 ### Hatua ya 3: Weka Maktaba Zote (Install Dependencies)
-Kutoka kwenye **mzizi wa mradi (root directory)**, endesha amri ifuatayo ili kuweka maktaba zote za Frontend na Backend kwa pamoja:
+Kutoka kwenye **mzizi wa mradi (root directory)**, endesha amri ifuatayo ili kuweka maktaba zote za Frontend na Backend kwa pamoja. 
+
+> 💡 **Kumbuka kuhusu ERESOLVE:** Kwa sababu mradi huu unatumia **React 19**, baadhi ya maktaba kama `lucide-react` au `recharts` zinaweza kutoa onyo la "conflicting peer dependency" (ERESOLVE). Tumeshaweka faili la `.npmrc` ili kutatua hili kiotomatiki, lakini ukipata hitilafu bado, tafadhali tumia amri hii:
 ```bash
-npm install
+npm install --legacy-peer-deps
 ```
 
 ### Hatua ya 4: Washa Mfumo (Run Development Server)
@@ -100,7 +102,7 @@ Ikiwa unataka kuiweka kwenye server halisi au uzalishaji:
 2. **Environment Variables**:
    Copy `.env.example` to `.env` at the root, and `server/.env.example` to `server/.env`.
 3. **Install Dependencies**:
-   Run `npm install` at the root.
+   Run `npm install` at the root. (If you face an ERESOLVE peer dependency error due to React 19, run `npm install --legacy-peer-deps` instead).
 4. **Run Dev Server**:
    Run `npm run dev` at the root. Access the app at **[http://localhost:3000](http://localhost:3000)**.
 5. **Build for Production**:
