@@ -270,7 +270,7 @@ const Layout = ({ children }) => {
       </div>
 
       {/* MOBILE BOTTOM NAVIGATION BAR */}
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg safe-area-bottom">
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-lg safe-area-bottom print:hidden">
         <nav className="flex items-center justify-around py-1">
           {menuItems.slice(0, 4).map((item) => {
             const Icon = item.icon;

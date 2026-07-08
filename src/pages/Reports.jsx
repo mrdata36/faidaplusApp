@@ -1070,17 +1070,36 @@ const Reports = () => {
         {/* Style block for print layout and custom page break */}
         <style>{`
           @media print {
-            body {
-              background: white !important;
-              color: black !important;
+            /* Reset all layout heights and scrolls to ensure multi-page printing works perfectly and does not truncate */
+            html, body, #root,
+            .min-h-screen,
+            div[class*="min-h-screen"],
+            main,
+            .flex-1,
+            div[class*="flex-1"],
+            .overflow-y-auto,
+            div[class*="overflow-y-auto"] {
+              height: auto !important;
+              min-height: 0 !important;
+              overflow: visible !important;
+              position: static !important;
+              display: block !important;
+              float: none !important;
             }
-            .print\\:hidden {
+
+            /* Hide everything that should be print-hidden */
+            .print\\:hidden,
+            [class*="print:hidden"],
+            aside,
+            header,
+            footer,
+            nav,
+            button,
+            form {
               display: none !important;
             }
-            .main-content {
-              padding: 0 !important;
-              margin: 0 !important;
-            }
+
+            /* Make sure the printable block takes full width and displays correctly */
             .print-page {
               width: 100% !important;
               max-width: 100% !important;
@@ -1088,15 +1107,45 @@ const Reports = () => {
               margin: 0 !important;
               border: none !important;
               box-shadow: none !important;
+              background: white !important;
+              color: black !important;
             }
+
+            /* Flawless page breaks */
             .page-break {
               page-break-before: always !important;
               break-before: page !important;
+              height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              display: block !important;
+            }
+
+            /* Prevent elements from breaking awkwardly across pages */
+            .report-paper-theme {
+              background: white !important;
+              color: black !important;
+              box-shadow: none !important;
+              border: none !important;
+              padding: 0 !important;
+              margin: 0 auto !important;
+              display: block !important;
+            }
+
+            /* Keep grid tables displaying correctly */
+            .grid {
+              display: grid !important;
+            }
+
+            .divide-y > * {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
           }
         `}</style>
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2 print:hidden">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-brand-battery rounded-xl flex items-center justify-center print:hidden">
               <BarChart3 className="w-6 h-6 text-white" />
@@ -1239,7 +1288,7 @@ const Reports = () => {
             </div>
             
             {/* Printable multi-page package view */}
-            <div className="hidden print:block space-y-12 report-paper-theme bg-white p-4">
+            <div className="hidden print:block space-y-12 report-paper-theme bg-white p-4 print:p-0 print:space-y-0 print:m-0 print:w-full">
               {renderProfitLoss(true)}
               <div className="page-break"></div>
               {renderBalanceSheet(true)}
