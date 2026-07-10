@@ -8,8 +8,9 @@ const productValidation = [
   body('category').trim().notEmpty().withMessage('Category is required'),
   body('buying_price').isFloat({ gt: 0 }).withMessage('Buying price must be greater than zero'),
   body('selling_price').isFloat({ gt: 0 }).withMessage('Selling price must be greater than zero'),
-  body('quantity').isInt({ min: 0 }).withMessage('Quantity must be zero or more'),
-  body('low_stock_threshold').isInt({ min: 0 }).withMessage('Low stock threshold must be zero or more')
+  body('quantity').isFloat({ min: 0 }).withMessage('Quantity must be zero or more'),
+  body('low_stock_threshold').isFloat({ min: 0 }).withMessage('Low stock threshold must be zero or more'),
+  body('unit').optional().trim().isString().withMessage('Unit must be a string')
 ];
 
 function createNotification(userId, title, message, type = 'info') {
@@ -35,7 +36,7 @@ function checkLowStock(userId, productId, productName, quantity, threshold) {
 router.get('/', (req, res) => {
   const userId = req.userId;
   db.all(
-    'SELECT id, product_name, category, buying_price, selling_price, quantity, low_stock_threshold, created_at FROM products WHERE user_id = ? ORDER BY created_at DESC',
+    'SELECT id, product_name, category, buying_price, selling_price, quantity, low_stock_threshold, unit, purchase_unit, selling_unit, purchase_to_base_rate, selling_to_base_rate, expiry_date, batch_number, created_at FROM products WHERE user_id = ? ORDER BY created_at DESC',
     [userId],
     (err, rows) => {
       if (err) {
@@ -50,7 +51,7 @@ router.get('/', (req, res) => {
 router.get('/low-stock', (req, res) => {
   const userId = req.userId;
   db.all(
-    'SELECT id, product_name, category, buying_price, selling_price, quantity, low_stock_threshold FROM products WHERE user_id = ? AND quantity <= low_stock_threshold ORDER BY quantity ASC',
+    'SELECT id, product_name, category, buying_price, selling_price, quantity, low_stock_threshold, unit, purchase_unit, selling_unit, purchase_to_base_rate, selling_to_base_rate, expiry_date, batch_number FROM products WHERE user_id = ? AND quantity <= low_stock_threshold ORDER BY quantity ASC',
     [userId],
     (err, rows) => {
       if (err) {
@@ -69,11 +70,28 @@ router.post('/', productValidation, (req, res) => {
   }
 
   const userId = req.userId;
-  const { product_name, category, buying_price, selling_price, quantity, low_stock_threshold } = req.body;
+  const { 
+    product_name, 
+    category, 
+    buying_price, 
+    selling_price, 
+    quantity, 
+    low_stock_threshold, 
+    unit = 'pcs',
+    purchase_unit = 'pcs',
+    selling_unit = 'pcs',
+    purchase_to_base_rate = 1.0,
+    selling_to_base_rate = 1.0,
+    expiry_date = null,
+    batch_number = null
+  } = req.body;
 
   db.run(
-    'INSERT INTO products (user_id, product_name, category, buying_price, selling_price, quantity, low_stock_threshold) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [userId, product_name, category, buying_price, selling_price, quantity, low_stock_threshold],
+    'INSERT INTO products (user_id, product_name, category, buying_price, selling_price, quantity, low_stock_threshold, unit, purchase_unit, selling_unit, purchase_to_base_rate, selling_to_base_rate, expiry_date, batch_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      userId, product_name, category, buying_price, selling_price, quantity, low_stock_threshold, unit,
+      purchase_unit, selling_unit, purchase_to_base_rate, selling_to_base_rate, expiry_date, batch_number
+    ],
     function (err) {
       if (err) {
         console.error(err);
@@ -86,7 +104,14 @@ router.post('/', productValidation, (req, res) => {
         buying_price,
         selling_price,
         quantity,
-        low_stock_threshold
+        low_stock_threshold,
+        unit,
+        purchase_unit,
+        selling_unit,
+        purchase_to_base_rate,
+        selling_to_base_rate,
+        expiry_date,
+        batch_number
       });
     }
   );
@@ -100,11 +125,29 @@ router.put('/:id', productValidation, (req, res) => {
 
   const userId = req.userId;
   const { id } = req.params;
-  const { product_name, category, buying_price, selling_price, quantity, low_stock_threshold } = req.body;
+  const { 
+    product_name, 
+    category, 
+    buying_price, 
+    selling_price, 
+    quantity, 
+    low_stock_threshold, 
+    unit = 'pcs',
+    purchase_unit = 'pcs',
+    selling_unit = 'pcs',
+    purchase_to_base_rate = 1.0,
+    selling_to_base_rate = 1.0,
+    expiry_date = null,
+    batch_number = null
+  } = req.body;
 
   db.run(
-    'UPDATE products SET product_name = ?, category = ?, buying_price = ?, selling_price = ?, quantity = ?, low_stock_threshold = ? WHERE id = ? AND user_id = ?',
-    [product_name, category, buying_price, selling_price, quantity, low_stock_threshold, id, userId],
+    'UPDATE products SET product_name = ?, category = ?, buying_price = ?, selling_price = ?, quantity = ?, low_stock_threshold = ?, unit = ?, purchase_unit = ?, selling_unit = ?, purchase_to_base_rate = ?, selling_to_base_rate = ?, expiry_date = ?, batch_number = ? WHERE id = ? AND user_id = ?',
+    [
+      product_name, category, buying_price, selling_price, quantity, low_stock_threshold, unit,
+      purchase_unit, selling_unit, purchase_to_base_rate, selling_to_base_rate, expiry_date, batch_number,
+      id, userId
+    ],
     function (err) {
       if (err) {
         console.error(err);
@@ -117,7 +160,22 @@ router.put('/:id', productValidation, (req, res) => {
       // Check for low stock after update
       checkLowStock(userId, id, product_name, quantity, low_stock_threshold);
 
-      res.json({ id: Number(id), product_name, category, buying_price, selling_price, quantity, low_stock_threshold });
+      res.json({ 
+        id: Number(id), 
+        product_name, 
+        category, 
+        buying_price, 
+        selling_price, 
+        quantity, 
+        low_stock_threshold, 
+        unit,
+        purchase_unit,
+        selling_unit,
+        purchase_to_base_rate,
+        selling_to_base_rate,
+        expiry_date,
+        batch_number
+      });
     }
   );
 });
@@ -148,7 +206,7 @@ router.delete('/:id', (req, res) => {
 });
 
 router.post('/:id/sell', [
-  body('quantity_sold').isInt({ gt: 0 }).withMessage('Quantity sold must be greater than zero')
+  body('quantity_sold').isFloat({ gt: 0 }).withMessage('Quantity sold must be greater than zero')
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -167,13 +225,15 @@ router.post('/:id/sell', [
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    if (product.quantity < quantity_sold) {
+
+    const baseQuantityDeducted = Number(quantity_sold) * (product.selling_to_base_rate || 1.0);
+    if (product.quantity < baseQuantityDeducted) {
       return res.status(400).json({ error: 'Not enough stock to complete sale' });
     }
 
     const total_amount = Number((product.selling_price * quantity_sold).toFixed(2));
     const unit_price = product.selling_price;
-    const newQuantity = product.quantity - quantity_sold;
+    const newQuantity = product.quantity - baseQuantityDeducted;
 
     db.serialize(() => {
       db.run('BEGIN TRANSACTION');

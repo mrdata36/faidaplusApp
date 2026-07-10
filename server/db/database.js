@@ -26,6 +26,36 @@ db.serialize(() => {
       db.run(statement.trim());
     }
   });
+
+  // Check and add new inventory unit and tracking columns to products table if they don't exist
+  db.all("PRAGMA table_info(products)", (err, columns) => {
+    if (err) {
+      console.error("Error reading table info for products", err);
+      return;
+    }
+    const colsToAdd = [
+      { name: 'unit', type: "TEXT DEFAULT 'pcs'" },
+      { name: 'purchase_unit', type: "TEXT DEFAULT 'pcs'" },
+      { name: 'selling_unit', type: "TEXT DEFAULT 'pcs'" },
+      { name: 'purchase_to_base_rate', type: "REAL DEFAULT 1.0" },
+      { name: 'selling_to_base_rate', type: "REAL DEFAULT 1.0" },
+      { name: 'expiry_date', type: "TEXT" },
+      { name: 'batch_number', type: "TEXT" }
+    ];
+
+    colsToAdd.forEach(col => {
+      const exists = columns && columns.some(c => c.name === col.name);
+      if (!exists) {
+        db.run(`ALTER TABLE products ADD COLUMN ${col.name} ${col.type}`, (alterErr) => {
+          if (alterErr) {
+            console.error(`Error adding ${col.name} column to products table`, alterErr);
+          } else {
+            console.log(`Successfully added ${col.name} column to products table`);
+          }
+        });
+      }
+    });
+  });
 });
 
 console.log('Database initialized successfully');

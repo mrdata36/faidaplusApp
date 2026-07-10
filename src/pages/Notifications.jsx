@@ -45,7 +45,16 @@ const getSeverityStyles = (type) => {
 };
 
 const Notifications = () => {
-  const { notifications, syncKey, fetchUnreadCount } = useNotifications();
+  const { 
+    notifications, 
+    syncKey, 
+    fetchUnreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    deleteNotification, 
+    clearAllNotifications 
+  } = useNotifications();
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -56,11 +65,10 @@ const Notifications = () => {
     fetchUnreadCount();
   }, [syncKey, fetchUnreadCount]);
 
-  const markAsRead = async (id) => {
+  const handleMarkAsRead = async (id) => {
     setLoading(true);
     try {
-      await axios.patch(`/api/notifications/${id}/read`);
-      await fetchUnreadCount();
+      await markAsRead(id);
     } catch (err) {
       setError(t('unable_to_update') || 'Unable to update notification');
     } finally {
@@ -68,7 +76,7 @@ const Notifications = () => {
     }
   };
 
-  const deleteNotification = (id) => {
+  const handleDeleteNotification = (id) => {
     setConfirmConfig({
       title: t('confirm_delete_title') || 'Confirm Deletion',
       message: t('confirm_delete_msg') || 'Are you absolutely sure you want to delete this item? This action is irreversible.',
@@ -76,8 +84,7 @@ const Notifications = () => {
         setConfirmOpen(false);
         setLoading(true);
         try {
-          await axios.delete(`/api/notifications/${id}`);
-          await fetchUnreadCount();
+          await deleteNotification(id);
         } catch (err) {
           setError(t('unable_to_delete') || 'Unable to delete notification');
         } finally {
@@ -88,7 +95,7 @@ const Notifications = () => {
     setConfirmOpen(true);
   };
 
-  const clearNotifications = () => {
+  const handleClearNotifications = () => {
     setConfirmConfig({
       title: t('confirm_clear_all_title') || 'Clear All Notifications',
       message: t('confirm_clear_all_msg') || 'Are you sure you want to clear all your notifications? This cannot be undone.',
@@ -96,8 +103,7 @@ const Notifications = () => {
         setConfirmOpen(false);
         setLoading(true);
         try {
-          await axios.put('/api/notifications/read-all');
-          await fetchUnreadCount();
+          await clearAllNotifications();
         } catch (err) {
           setError(t('unable_to_clear') || 'Unable to clear notifications');
         } finally {
@@ -106,6 +112,17 @@ const Notifications = () => {
       }
     });
     setConfirmOpen(true);
+  };
+
+  const handleMarkAllRead = async () => {
+    setLoading(true);
+    try {
+      await markAllAsRead();
+    } catch (err) {
+      setError('Unable to update notifications');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -126,13 +143,22 @@ const Notifications = () => {
             </div>
           </div>
           {notifications.length > 0 && (
-            <button
-              onClick={clearNotifications}
-              className="flex items-center justify-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl hover:bg-red-600 transition-colors cursor-pointer shadow text-sm font-semibold w-full md:w-auto"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('clear_all')}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <button
+                onClick={handleMarkAllRead}
+                className="flex items-center justify-center gap-2 bg-blue-600 dark:bg-blue-500 text-white px-5 py-3 rounded-xl hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors cursor-pointer shadow text-sm font-semibold w-full sm:w-auto"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                {t('mark_all_read') || 'Soma Zote'}
+              </button>
+              <button
+                onClick={handleClearNotifications}
+                className="flex items-center justify-center gap-2 bg-red-500 text-white px-5 py-3 rounded-xl hover:bg-red-600 transition-colors cursor-pointer shadow text-sm font-semibold w-full sm:w-auto"
+              >
+                <Trash2 className="w-4 h-4" />
+                {t('clear_all') || 'Futa Zote'}
+              </button>
+            </div>
           )}
         </div>
 
@@ -187,7 +213,7 @@ const Notifications = () => {
                     <div className="flex gap-2 w-full md:w-auto md:flex-col lg:flex-row justify-end shrink-0 pt-2 md:pt-0">
                       {!notification.is_read && (
                         <button
-                          onClick={() => markAsRead(notification.id)}
+                          onClick={() => handleMarkAsRead(notification.id)}
                           className="flex items-center justify-center gap-2 bg-brand-bluecola text-white px-4 py-2.5 rounded-lg hover:bg-brand-trueblue transition-colors text-xs sm:text-sm font-semibold cursor-pointer shadow-sm flex-1 md:flex-none"
                         >
                           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -195,7 +221,7 @@ const Notifications = () => {
                         </button>
                       )}
                       <button
-                        onClick={() => deleteNotification(notification.id)}
+                        onClick={() => handleDeleteNotification(notification.id)}
                         className="flex items-center justify-center gap-2 bg-red-500 text-white px-4 py-2.5 rounded-lg hover:bg-red-600 transition-colors text-xs sm:text-sm font-semibold cursor-pointer shadow-sm flex-1 md:flex-none"
                       >
                         <Trash2 className="w-4 h-4 shrink-0" />

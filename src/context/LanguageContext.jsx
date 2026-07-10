@@ -147,6 +147,7 @@ const translations = {
     stock_and_alerts: 'Stock & Alerts',
     pricing_and_margins: 'Pricing & Margins',
     units: 'units',
+    unit: 'Measurement Unit',
 
     // Reports page
     financial_reports: 'Financial Reports',
@@ -210,6 +211,8 @@ const translations = {
     theme_label: 'Theme',
     security_label: 'Security',
     preferences_label: 'Preferences',
+    cloud_sync_label: 'Cloud Sync (PostgreSQL)',
+    ai_insights_label: 'AI Advisor & Insights',
 
     // Notifications page
     notification_center: 'Notification Center',
@@ -378,6 +381,7 @@ const translations = {
     stock_and_alerts: 'Stoki & Arifa',
     pricing_and_margins: 'Bei & Faida',
     units: 'vizio',
+    unit: 'Kizio (Vizio)',
 
     // Reports page
     financial_reports: 'Ripoti za Kifedha',
@@ -441,6 +445,8 @@ const translations = {
     theme_label: 'Mandhari',
     security_label: 'Usalama',
     preferences_label: 'Mapendeleo',
+    cloud_sync_label: 'Ulandanishaji Cloud (Postgres)',
+    ai_insights_label: 'Ushauri wa AI (Gemini)',
 
     // Notifications page
     notification_center: 'Kituo cha Arifa',

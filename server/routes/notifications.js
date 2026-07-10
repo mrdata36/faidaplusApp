@@ -61,6 +61,17 @@ router.delete('/:id', (req, res) => {
   });
 });
 
+router.delete('/clear-all', (req, res) => {
+  const userId = req.userId;
+  db.run('DELETE FROM notifications WHERE user_id = ?', [userId], function (err) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Server error' });
+    }
+    res.status(200).json({ success: true });
+  });
+});
+
 router.post('/', [
   body('title').trim().notEmpty().withMessage('Title is required'),
   body('message').trim().notEmpty().withMessage('Message is required'),

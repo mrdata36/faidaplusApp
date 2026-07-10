@@ -4,6 +4,25 @@ const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
 const db = require('../db/database');
 
+// Normalize camelCase fields from frontend to snake_case for SQLite backend expectations
+router.use((req, res, next) => {
+  if (req.body) {
+    if (req.body.name && !req.body.full_name) {
+      req.body.full_name = req.body.name;
+    }
+    if (req.body.currentPassword && !req.body.current_password) {
+      req.body.current_password = req.body.currentPassword;
+    }
+    if (req.body.newPassword && !req.body.new_password) {
+      req.body.new_password = req.body.newPassword;
+    }
+    if (req.body.confirmPassword && !req.body.confirm_password) {
+      req.body.confirm_password = req.body.confirmPassword;
+    }
+  }
+  next();
+});
+
 router.put('/profile', [
   body('full_name').trim().notEmpty().withMessage('Full name is required'),
   body('business_name').trim().notEmpty().withMessage('Business name is required'),
@@ -101,6 +120,89 @@ router.put('/preferences', [
       return res.status(500).json({ error: 'Server error' });
     }
     res.json({ currency, language });
+  });
+});
+
+router.get('/profile', (req, res) => {
+  const userId = req.userId;
+  db.get('SELECT full_name, business_name, email, currency FROM users WHERE id = ?', [userId], (err, user) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Server error loading profile' });
+    }
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    db.all('SELECT key, value FROM settings WHERE user_id = ?', [userId], (settingsErr, rows) => {
+      if (settingsErr) {
+        console.error(settingsErr);
+        return res.status(500).json({ error: 'Server error loading settings' });
+      }
+
+      const settingsMap = {};
+      rows.forEach(r => {
+        settingsMap[r.key] = r.value;
+      });
+
+      const profile = {
+        name: user.full_name,
+        full_name: user.full_name,
+        business_name: user.business_name,
+        email: user.email
+      };
+
+      const preferences = {
+        currency: user.currency || 'TZS',
+        language: settingsMap['language'] || 'English'
+      };
+
+      const notifications = {
+        email_alerts: settingsMap['email_alerts'] === 'true',
+        sms_alerts: settingsMap['sms_alerts'] === 'true',
+        low_stock_alerts: settingsMap['low_stock_alerts'] !== 'false',
+        expiry_alerts: settingsMap['expiry_alerts'] !== 'false'
+      };
+
+      res.json({ profile, preferences, notifications });
+    });
+  });
+});
+
+router.put('/notifications', (req, res) => {
+  const userId = req.userId;
+  const { email_alerts, sms_alerts, low_stock_alerts, expiry_alerts } = req.body;
+
+  const updates = [
+    { key: 'email_alerts', val: String(!!email_alerts) },
+    { key: 'sms_alerts', val: String(!!sms_alerts) },
+    { key: 'low_stock_alerts', val: String(!!low_stock_alerts) },
+    { key: 'expiry_alerts', val: String(!!expiry_alerts) }
+  ];
+
+  db.serialize(() => {
+    db.run('BEGIN TRANSACTION');
+    let hasErr = false;
+    updates.forEach(upd => {
+      db.run(
+        'INSERT OR REPLACE INTO settings (user_id, key, value, updated_at) VALUES (?, ?, ?, datetime("now"))',
+        [userId, upd.key, upd.val],
+        (err) => {
+          if (err) {
+            console.error(err);
+            hasErr = true;
+          }
+        }
+      );
+    });
+
+    db.run('COMMIT', (err) => {
+      if (err || hasErr) {
+        db.run('ROLLBACK');
+        return res.status(500).json({ error: 'Failed to update notification settings' });
+      }
+      res.json({ email_alerts, sms_alerts, low_stock_alerts, expiry_alerts });
+    });
   });
 });
 

@@ -11,13 +11,43 @@ import { useLanguage } from '../context/LanguageContext';
 
 const productCategories = ['Food', 'Electronics', 'Clothing', 'Services', 'Other'];
 
+const MEASUREMENT_UNITS = [
+  { value: 'pcs', label: 'Piece (pcs) / Kipande' },
+  { value: 'kg', label: 'Kg (kg) / Kilogramu' },
+  { value: 'g', label: 'Gram (g) / Gramu' },
+  { value: 'L', label: 'Liter (L) / Lita' },
+  { value: 'mL', label: 'Milliliter (mL) / Mililita' },
+  { value: 'm', label: 'Meter (m) / Mita' },
+  { value: 'cm', label: 'Centimeter (cm) / Sentimita' },
+  { value: 'box', label: 'Box (box) / Sanduku' },
+  { value: 'carton', label: 'Carton (carton) / Katoni' },
+  { value: 'sack', label: 'Sack (sack) / Gunia' },
+  { value: 'bottle', label: 'Bottle (bottle) / Chupa' },
+  { value: 'packet', label: 'Packet (packet) / Paketi' },
+  { value: 'tray', label: 'Tray (tray) / Trei' }
+];
+
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [saleOpen, setSaleOpen] = useState(false);
-  const [form, setForm] = useState({ product_name: '', category: 'Food', buying_price: '', selling_price: '', quantity: 0, low_stock_threshold: 5 });
+  const [form, setForm] = useState({
+    product_name: '',
+    category: 'Food',
+    buying_price: '',
+    selling_price: '',
+    quantity: 0,
+    low_stock_threshold: 5,
+    unit: 'pcs',
+    purchase_unit: 'pcs',
+    selling_unit: 'pcs',
+    purchase_to_base_rate: 1.0,
+    selling_to_base_rate: 1.0,
+    expiry_date: '',
+    batch_number: ''
+  });
   const [saleForm, setSaleForm] = useState({ quantity_sold: 1 });
   const [error, setError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -55,11 +85,32 @@ const Products = () => {
         buying_price: product.buying_price,
         selling_price: product.selling_price,
         quantity: product.quantity,
-        low_stock_threshold: product.low_stock_threshold
+        low_stock_threshold: product.low_stock_threshold,
+        unit: product.unit || 'pcs',
+        purchase_unit: product.purchase_unit || 'pcs',
+        selling_unit: product.selling_unit || 'pcs',
+        purchase_to_base_rate: product.purchase_to_base_rate || 1.0,
+        selling_to_base_rate: product.selling_to_base_rate || 1.0,
+        expiry_date: product.expiry_date || '',
+        batch_number: product.batch_number || ''
       });
     } else {
       setSelectedProduct(null);
-      setForm({ product_name: '', category: 'Food', buying_price: '', selling_price: '', quantity: 0, low_stock_threshold: 5 });
+      setForm({
+        product_name: '',
+        category: 'Food',
+        buying_price: '',
+        selling_price: '',
+        quantity: 0,
+        low_stock_threshold: 5,
+        unit: 'pcs',
+        purchase_unit: 'pcs',
+        selling_unit: 'pcs',
+        purchase_to_base_rate: 1.0,
+        selling_to_base_rate: 1.0,
+        expiry_date: '',
+        batch_number: ''
+      });
     }
     setError('');
     setModalOpen(true);
@@ -218,7 +269,7 @@ const Products = () => {
                         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3">
                           <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{t('stock_label')}</p>
                           <p className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                            {product.quantity}
+                            {product.quantity} <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">{product.unit || 'pcs'}</span>
                           </p>
                         </div>
                         <div className="bg-brand-picton/10 rounded-lg p-3">
@@ -228,6 +279,36 @@ const Products = () => {
                           </p>
                         </div>
                       </div>
+
+                      {/* Unit mappings, Batch, and Expiry info */}
+                      {(product.batch_number || product.expiry_date || (product.purchase_unit && product.purchase_unit !== product.unit) || (product.selling_unit && product.selling_unit !== product.unit)) && (
+                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50 flex flex-wrap gap-4 items-center text-xs text-slate-500 dark:text-slate-400">
+                          {product.batch_number && (
+                            <span className="bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded">
+                              Batch: <strong className="text-slate-700 dark:text-slate-200">{product.batch_number}</strong>
+                            </span>
+                          )}
+                          {product.expiry_date && (
+                            <span className={`px-2 py-0.5 rounded ${
+                              new Date(product.expiry_date) < new Date() 
+                                ? 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 font-medium' 
+                                : 'bg-slate-100 dark:bg-slate-700/60'
+                            }`}>
+                              Expiry: <strong className={new Date(product.expiry_date) < new Date() ? 'text-red-700 dark:text-red-300' : 'text-slate-700 dark:text-slate-200'}>{product.expiry_date}</strong>
+                            </span>
+                          )}
+                          {(product.purchase_unit && product.purchase_unit !== product.unit) && (
+                            <span className="bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded">
+                              Buy: <strong className="text-slate-700 dark:text-slate-200">1 {product.purchase_unit} = {product.purchase_to_base_rate} {product.unit}</strong>
+                            </span>
+                          )}
+                          {(product.selling_unit && product.selling_unit !== product.unit) && (
+                            <span className="bg-slate-100 dark:bg-slate-700/60 px-2 py-0.5 rounded">
+                              Sell: <strong className="text-slate-700 dark:text-slate-200">1 {product.selling_unit} = {product.selling_to_base_rate} {product.unit}</strong>
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-3 lg:flex-col lg:items-end w-full lg:w-auto">
@@ -312,7 +393,7 @@ const Products = () => {
                     />
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4 md:grid-cols-3">
                     <div>
                       <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
                         {t('category')}
@@ -337,12 +418,29 @@ const Products = () => {
                         name="quantity"
                         type="number"
                         min="0"
+                        step="any"
                         value={form.quantity}
                         onChange={handleProductChange}
                         placeholder="0"
                         className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
                         required
                       />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
+                        {t('unit') || 'Kizio (Unit)'}
+                      </label>
+                      <select
+                        name="unit"
+                        value={form.unit || 'pcs'}
+                        onChange={handleProductChange}
+                        className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        required
+                      >
+                        {MEASUREMENT_UNITS.map(u => (
+                          <option key={u.value} value={u.value}>{u.label}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -395,6 +493,117 @@ const Products = () => {
                       className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
                       required
                     />
+                  </div>
+
+                  {/* Advanced Multi-Unit Mapping & Batches Section */}
+                  <div className="bg-slate-50 dark:bg-slate-850/40 p-5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-4">
+                    <h3 className="text-sm font-semibold text-brand-bluecola dark:text-slate-300 flex items-center gap-2">
+                      <Package className="w-4 h-4 text-brand-bluecola" />
+                      <span>Vipimo Vingine & Batches (Advanced Multi-Unit & Batch Tracking)</span>
+                    </h3>
+                    
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Kizio cha Kununulia (Purchase Unit)
+                        </label>
+                        <select
+                          name="purchase_unit"
+                          value={form.purchase_unit || 'pcs'}
+                          onChange={handleProductChange}
+                          className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        >
+                          {MEASUREMENT_UNITS.map(u => (
+                            <option key={u.value} value={u.value}>{u.label}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Kizio cha Kuuzia (Selling Unit)
+                        </label>
+                        <select
+                          name="selling_unit"
+                          value={form.selling_unit || 'pcs'}
+                          onChange={handleProductChange}
+                          className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        >
+                          {MEASUREMENT_UNITS.map(u => (
+                            <option key={u.value} value={u.value}>{u.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Kiwango cha Ubadilishaji Ununuzi (Purchase-to-Base Rate)
+                        </label>
+                        <span className="text-[10px] text-slate-500 block mb-1">
+                          Ni {form.unit} ngapi ziko kwenye 1 {form.purchase_unit}?
+                        </span>
+                        <input
+                          name="purchase_to_base_rate"
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={form.purchase_to_base_rate}
+                          onChange={handleProductChange}
+                          placeholder="1.0"
+                          className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Kiwango cha Ubadilishaji Mauzo (Selling-to-Base Rate)
+                        </label>
+                        <span className="text-[10px] text-slate-500 block mb-1">
+                          Ni {form.unit} ngapi ziko kwenye 1 {form.selling_unit}?
+                        </span>
+                        <input
+                          name="selling_to_base_rate"
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={form.selling_to_base_rate}
+                          onChange={handleProductChange}
+                          placeholder="1.0"
+                          className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 md:grid-cols-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Tarehe ya Mwisho wa Matumizi (Expiry Date - Optional)
+                        </label>
+                        <input
+                          name="expiry_date"
+                          type="date"
+                          value={form.expiry_date}
+                          onChange={handleProductChange}
+                          className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                          Nambari ya Batch (Batch Number - Optional)
+                        </label>
+                        <input
+                          name="batch_number"
+                          type="text"
+                          value={form.batch_number}
+                          onChange={handleProductChange}
+                          placeholder="e.g. BATCH-2026-X"
+                          className="w-full px-3 py-2 text-xs border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   {error && (
@@ -469,18 +678,22 @@ const Products = () => {
                   <form onSubmit={sellProduct} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">
-                        {t('quantity_to_sell')}
+                        {t('quantity_to_sell')} ({selectedProduct.selling_unit || selectedProduct.unit || 'pcs'})
                       </label>
                       <input
                         name="quantity_sold"
                         type="number"
-                        min="1"
-                        max={selectedProduct.quantity}
+                        min="0.001"
+                        step="any"
+                        max={selectedProduct.quantity / (selectedProduct.selling_to_base_rate || 1.0)}
                         value={saleForm.quantity_sold}
                         onChange={handleSaleChange}
                         className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-brand-bluecola focus:border-transparent"
                         required
                       />
+                      <span className="text-xs text-slate-500 block mt-1">
+                        Mzigo Uliopo (Available): {(selectedProduct.quantity / (selectedProduct.selling_to_base_rate || 1.0)).toFixed(2)} {selectedProduct.selling_unit || selectedProduct.unit || 'pcs'}
+                      </span>
                     </div>
 
                     <div className="p-3 bg-brand-picton/10 border border-brand-picton/20 rounded-lg">

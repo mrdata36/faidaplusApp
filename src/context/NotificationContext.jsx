@@ -38,13 +38,53 @@ export const NotificationProvider = ({ children }) => {
     setSyncKey(prev => prev + 1);
   }, []);
 
+  const markAsRead = async (id) => {
+    try {
+      await axios.put(`/api/notifications/${id}/read`);
+      setSyncKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error marking notification as read:', err);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      await axios.put('/api/notifications/read-all');
+      setSyncKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error marking all notifications as read:', err);
+    }
+  };
+
+  const deleteNotification = async (id) => {
+    try {
+      await axios.delete(`/api/notifications/${id}`);
+      setSyncKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error deleting notification:', err);
+    }
+  };
+
+  const clearAllNotifications = async () => {
+    try {
+      await axios.delete('/api/notifications/clear-all');
+      setSyncKey(prev => prev + 1);
+    } catch (err) {
+      console.error('Error clearing all notifications:', err);
+    }
+  };
+
   return (
     <NotificationContext.Provider value={{
       notifications,
       unreadCount,
       syncKey,
       fetchUnreadCount,
-      notifyNewNotification
+      notifyNewNotification,
+      markAsRead,
+      markAllAsRead,
+      deleteNotification,
+      clearAllNotifications
     }}>
       {children}
     </NotificationContext.Provider>

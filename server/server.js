@@ -28,6 +28,7 @@ app.use('/api/products', require('./middleware/auth'), require('./routes/product
 app.use('/api/notifications', require('./middleware/auth'), require('./routes/notifications'));
 app.use('/api/reports', require('./middleware/auth'), require('./routes/reports'));
 app.use('/api/settings', require('./middleware/auth'), require('./routes/settings'));
+app.use('/api/ai', require('./middleware/auth'), require('./routes/ai'));
 
 // Cron jobs
 require('./cron/jobs');
