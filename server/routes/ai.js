@@ -516,4 +516,59 @@ router.post('/sync-postgres', async (req, res) => {
   }
 });
 
+// GET /api/ai/saved-insights
+router.get('/saved-insights', async (req, res) => {
+  const userId = req.userId;
+  try {
+    const rows = await dbAll('SELECT * FROM saved_insights WHERE user_id = ? ORDER BY created_at DESC', [userId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch saved insights' });
+  }
+});
+
+// POST /api/ai/saved-insights
+router.post('/saved-insights', async (req, res) => {
+  const userId = req.userId;
+  const { title, insight_text, type } = req.body;
+  if (!title || !insight_text) {
+    return res.status(400).json({ error: 'Title and insight text are required' });
+  }
+  try {
+    db.run(
+      'INSERT INTO saved_insights (user_id, title, insight_text, type) VALUES (?, ?, ?, ?)',
+      [userId, title, insight_text, type || 'general'],
+      function (err) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ error: 'Failed to save insight' });
+        }
+        res.json({ id: this.lastID, user_id: userId, title, insight_text, type });
+      }
+    );
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save insight' });
+  }
+});
+
+// DELETE /api/ai/saved-insights/:id
+router.delete('/saved-insights/:id', async (req, res) => {
+  const userId = req.userId;
+  const { id } = req.params;
+  try {
+    db.run('DELETE FROM saved_insights WHERE id = ? AND user_id = ?', [id, userId], function (err) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Failed to delete saved insight' });
+      }
+      res.json({ success: true, message: 'Saved insight deleted successfully' });
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete saved insight' });
+  }
+});
+
 module.exports = router;

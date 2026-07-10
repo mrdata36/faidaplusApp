@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import ExcelJS from 'exceljs';
 import Layout from '../components/Layout';
-import { FileText, TrendingUp, TrendingDown, DollarSign, Calendar, BarChart3, Printer, FileSpreadsheet } from 'lucide-react';
+import { FileText, TrendingUp, TrendingDown, DollarSign, Calendar, BarChart3, Printer, FileSpreadsheet, Sparkles, Trash2, History, Save, Download, CheckCircle, X } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { useDataSync } from '../context/DataSyncContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -64,7 +64,21 @@ const localTranslations = {
     retained_earnings: "Retained earnings",
     total_equity: "Total Stockholders Equity",
     profit_loss_subtitle: "Statement of Profit or Loss",
-    balance_sheet_subtitle: "Statement of Financial Position"
+    balance_sheet_subtitle: "Statement of Financial Position",
+    ai_insights_title: "AI Business Advisor Report",
+    ai_insights_subtitle: "Business Advisor & Insights",
+    generate_ai_report: "Generate AI Advisor Report",
+    generating_ai: "Analyzing business data...",
+    save_report: "Save Report to History",
+    saving: "Saving...",
+    report_saved_ok: "Report saved successfully!",
+    saved_reports_history: "Saved Advisory Reports History",
+    no_saved_reports: "No saved advisor reports yet.",
+    delete_report: "Delete",
+    download_pdf: "Print / Save PDF",
+    advisory_report_header: "FaidaPlus Enterprise BI Advisory Report",
+    general_insights: "General Strategic Advice",
+    or_select_saved: "Select a previously saved report from the list on the left to review or reprint, or generate a new live report below!"
   },
   sw: {
     profit_loss_statement: "Ripoti ya Faida na Hasara",
@@ -114,7 +128,21 @@ const localTranslations = {
     retained_earnings: "Akiba ya Faida (Retained Earnings)",
     total_equity: "Jumla ya Mtaji na Akiba",
     profit_loss_subtitle: "Ripoti ya Faida na Hasara",
-    balance_sheet_subtitle: "Ripoti ya Hali ya Kifedha (Mizania)"
+    balance_sheet_subtitle: "Ripoti ya Hali ya Kifedha (Mizania)",
+    ai_insights_title: "Ripoti ya Ushauri wa Kibiashara ya AI",
+    ai_insights_subtitle: "Ushauri wa Kibiashara na Intelligence",
+    generate_ai_report: "Zalisha Ripoti ya Ushauri ya AI",
+    generating_ai: "Tunachambua takwimu za biashara...",
+    save_report: "Hifadhi Ripoti Kwenye Kumbukumbu",
+    saving: "Tunahifadhi...",
+    report_saved_ok: "Ripoti imehifadhiwa kikamilifu kibiashara!",
+    saved_reports_history: "Kumbukumbu ya Ripoti za Ushauri",
+    no_saved_reports: "Bado hakuna ripoti za ushauri zilizohifadhiwa.",
+    delete_report: "Futa",
+    download_pdf: "Chapa / Pakua PDF",
+    advisory_report_header: "Ripoti ya Ushauri wa Kibiashara ya FaidaPlus Enterprise AI",
+    general_insights: "Ushauri Maalum wa Kibiashara",
+    or_select_saved: "Chagua ripoti iliyohifadhiwa awali kutoka kwenye orodha kushoto ili kuipitia/kuichapa tena, au bonyeza kitufe hapa chini ili kuzalisha ripoti mpya ya sasa!"
   }
 };
 
@@ -166,6 +194,81 @@ const Reports = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('pl');
+  
+  // AI Advisor States & Handlers
+  const [aiReport, setAiReport] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [savedInsights, setSavedInsights] = useState([]);
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const loadSavedInsights = async () => {
+    try {
+      const response = await axios.get('/api/ai/saved-insights');
+      setSavedInsights(response.data);
+    } catch (err) {
+      console.error('Failed to load saved insights:', err);
+    }
+  };
+
+  const generateAIReport = async () => {
+    setAiLoading(true);
+    setAiError('');
+    try {
+      const response = await axios.get('/api/ai/insights');
+      setAiReport({
+        title: language === 'sw' 
+          ? `Ripoti ya Ushauri ya Kibiashara - ${getReportPeriodLabel() || 'Leo'}`
+          : `AI Business Advisory Report - ${getReportPeriodLabel() || 'Today'}`,
+        insight_text: response.data.insight,
+        created_at: new Date().toISOString()
+      });
+    } catch (err) {
+      setAiError(err.response?.data?.error || 'Inashindwa kuzalisha ushauri kwa sasa.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const saveInsight = async () => {
+    if (!aiReport) return;
+    setSaveLoading(true);
+    try {
+      const title = aiReport.title || (language === 'sw' ? 'Ripoti ya Ushauri' : 'Business Advisory Report');
+      await axios.post('/api/ai/saved-insights', {
+        title,
+        insight_text: aiReport.insight_text,
+        type: 'general'
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+      await loadSavedInsights();
+    } catch (err) {
+      console.error('Failed to save insights:', err);
+    } finally {
+      setSaveLoading(false);
+    }
+  };
+
+  const deleteInsight = async (id, e) => {
+    e.stopPropagation();
+    if (!window.confirm(language === 'sw' ? 'Una uhakika unataka kufuta ripoti hii?' : 'Are you sure you want to delete this report?')) return;
+    try {
+      await axios.delete(`/api/ai/saved-insights/${id}`);
+      await loadSavedInsights();
+      if (aiReport && aiReport.id === id) {
+        setAiReport(null);
+      }
+    } catch (err) {
+      console.error('Failed to delete saved insight:', err);
+    }
+  };
+
+  useEffect(() => {
+    loadSavedInsights();
+  }, []);
+
   const { syncKey } = useDataSync();
   const { language, t } = useLanguage();
   const { user } = useAuth();
@@ -1064,6 +1167,300 @@ const Reports = () => {
     );
   };
 
+  const renderBoldText = (text) => {
+    if (!text) return null;
+    const parts = text.split('**');
+    return parts.map((part, index) => 
+      index % 2 === 1 ? <strong key={index} className="font-bold text-slate-950 dark:text-white">{part}</strong> : part
+    );
+  };
+
+  const parseMarkdownToJSX = (text) => {
+    if (!text) return null;
+    const lines = text.split('\n');
+    return lines.map((line, i) => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('###')) {
+        return (
+          <h3 key={i} className="text-base md:text-lg font-bold text-[#1c3f24] mt-6 mb-3 border-b border-slate-100 dark:border-slate-800 pb-1.5 uppercase tracking-wide">
+            {trimmed.replace(/###\s*\**/g, '').replace(/\**/g, '')}
+          </h3>
+        );
+      }
+      if (trimmed.startsWith('####')) {
+        return (
+          <h4 key={i} className="text-xs md:text-sm font-bold text-slate-800 dark:text-slate-200 mt-5 mb-2.5 flex items-center gap-2 uppercase tracking-wider">
+            <span className="w-1.5 h-3.5 bg-[#00b050] rounded-sm shrink-0"></span>
+            {trimmed.replace(/####\s*\**/g, '').replace(/\**/g, '')}
+          </h4>
+        );
+      }
+      if (trimmed.startsWith('*') || trimmed.startsWith('-')) {
+        const content = trimmed.replace(/^[*-]\s*/, '');
+        return (
+          <div key={i} className="pl-4 py-1 flex items-start gap-2 text-slate-700 dark:text-slate-300">
+            <span className="text-[#00b050] mt-1.5 shrink-0 text-xs">•</span>
+            <span className="text-xs md:text-sm leading-relaxed">{renderBoldText(content)}</span>
+          </div>
+        );
+      }
+      if (trimmed.startsWith('1.') || trimmed.startsWith('2.') || trimmed.startsWith('3.') || trimmed.match(/^\d+\./)) {
+        const num = trimmed.match(/^\d+/)?.[0] || '•';
+        const content = trimmed.replace(/^\d+\.\s*/, '');
+        return (
+          <div key={i} className="pl-4 py-2.5 flex items-start gap-3 bg-emerald-50/45 dark:bg-emerald-950/10 rounded-xl p-3 my-2.5 border border-emerald-100/60 dark:border-emerald-900/30">
+            <span className="font-bold text-[#1c3f24] dark:text-emerald-400 shrink-0 text-xs md:text-sm">{num}.</span>
+            <span className="text-xs md:text-sm leading-relaxed text-slate-700 dark:text-slate-300 font-medium italic">{renderBoldText(content)}</span>
+          </div>
+        );
+      }
+      if (trimmed === '---') {
+        return <hr key={i} className="my-5 border-slate-100 dark:border-slate-800" />;
+      }
+      if (trimmed === '') return null;
+      return (
+        <p key={i} className="text-slate-700 dark:text-slate-300 text-xs md:text-sm leading-relaxed my-2">
+          {renderBoldText(trimmed)}
+        </p>
+      );
+    });
+  };
+
+  const renderAIInsightsReport = (isPrintMode = false) => {
+    if (!aiReport) {
+      if (isPrintMode) return null;
+      return (
+        <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-8 shadow-sm flex flex-col items-center justify-center text-center h-[550px]">
+          <div className="w-16 h-16 bg-sky-50 dark:bg-sky-900/10 rounded-full flex items-center justify-center text-[#0284c7] mb-4">
+            <Sparkles className="w-8 h-8 animate-pulse" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2">
+            {tCustom('ai_insights_title')}
+          </h3>
+          <p className="text-slate-600 dark:text-slate-400 text-sm max-w-md mb-6 leading-relaxed">
+            {tCustom('or_select_saved')}
+          </p>
+
+          {aiError && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-800 dark:text-red-200 text-xs mb-4 max-w-sm">
+              {aiError}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={generateAIReport}
+            disabled={aiLoading}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-[#1c3f24] to-[#00b050] hover:scale-[1.02] active:scale-[0.98] text-white font-semibold px-6 py-3 rounded-xl shadow-md cursor-pointer transition disabled:opacity-50"
+          >
+            {aiLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>{tCustom('generating_ai')}</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                <span>{tCustom('generate_ai_report')}</span>
+              </>
+            )}
+          </button>
+        </div>
+      );
+    }
+
+    if (isPrintMode) {
+      return (
+        <div className="report-paper-theme bg-white text-slate-950 font-sans p-0 m-0 w-full print-page">
+          {/* Brand Header */}
+          <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-start">
+            <div>
+              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#1c3f24] uppercase">{user?.business_name || 'FaidaPlus Client'}</h2>
+              {user?.business_address && <p className="text-slate-600 text-xs mt-1">{user.business_address}</p>}
+              {user?.phone_number && <p className="text-slate-600 text-xs">{user.phone_number}</p>}
+              <p className="text-slate-700 text-xs font-semibold mt-2">{aiReport.title}</p>
+            </div>
+            <div className="text-right">
+              <span className="font-bold text-[10px] bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider">AI ADVISOR REPORT</span>
+            </div>
+          </div>
+
+          {/* Main green header */}
+          <div className="bg-[#1c3f24] text-white p-4 rounded-t-lg flex justify-between items-center font-bold text-xs uppercase tracking-wider">
+            <span>{tCustom('advisory_report_header')}</span>
+            <span className="text-[10px] lowercase font-normal">{new Date(aiReport.created_at).toLocaleDateString()}</span>
+          </div>
+
+          {/* Body Content */}
+          <div className="border border-t-0 border-slate-200 p-6 md:p-8 rounded-b-lg bg-white">
+            <div className="space-y-4 text-xs md:text-sm">
+              {parseMarkdownToJSX(aiReport.insight_text)}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="mt-8 bg-slate-50 border border-slate-200 p-4 rounded-xl flex justify-between items-center text-xs text-slate-600">
+            <div>
+              <p className="font-bold text-slate-800">Ushauri na Uchambuzi wa Kimkakati</p>
+              <p className="text-slate-500 text-[10px] mt-0.5">Ushauri huu umezalishwa salama na FaidaPlus AI kulingana na takwimu halisi za biashara yako.</p>
+            </div>
+            <div className="text-right">
+              <span className="font-bold text-sm tracking-tight text-slate-800 uppercase">Faida<span className="text-[#00b050]">Plus</span></span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Left Side: Saved History */}
+        <div className="lg:col-span-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm flex flex-col h-[650px]">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-700 mb-3 shrink-0">
+            <History className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+            <h3 className="font-bold text-sm text-slate-800 dark:text-slate-100">{tCustom('saved_reports_history')}</h3>
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+            {savedInsights.length === 0 ? (
+              <div className="text-center py-12 text-slate-400 dark:text-slate-500 text-xs">
+                {tCustom('no_saved_reports')}
+              </div>
+            ) : (
+              savedInsights.map((saved) => (
+                <div
+                  key={saved.id}
+                  onClick={() => setAiReport(saved)}
+                  className={`p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-700/40 ${
+                    aiReport && aiReport.id === saved.id
+                      ? 'border-[#0284c7] bg-sky-50/30 dark:bg-sky-900/10'
+                      : 'border-slate-100 dark:border-slate-700/60'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <p className="font-semibold text-xs text-slate-800 dark:text-slate-100 line-clamp-2 leading-tight">
+                      {saved.title}
+                    </p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                      {new Date(saved.created_at).toLocaleDateString(language === 'sw' ? 'sw-TZ' : 'en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex justify-end pt-1 border-t border-slate-100 dark:border-slate-700/50 mt-1">
+                    <button
+                      onClick={(e) => deleteInsight(saved.id, e)}
+                      type="button"
+                      className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded transition mt-1"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Right Side: Document viewer */}
+        <div className="lg:col-span-2 flex flex-col gap-4">
+          {/* Document Actions Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 shadow-sm shrink-0">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <CheckCircle className="w-4 h-4 text-emerald-500" />
+              {language === 'sw' ? 'Ushauri Uko Tayari' : 'Advisory Ready'}
+            </span>
+            
+            <div className="flex items-center gap-2">
+              {!aiReport.id && (
+                <button
+                  onClick={saveInsight}
+                  disabled={saveLoading || saveSuccess}
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    saveSuccess
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300'
+                      : 'bg-[#1c3f24] hover:bg-[#132c19] text-white shadow-sm'
+                  }`}
+                >
+                  {saveSuccess ? (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      <span>{tCustom('report_saved_ok')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{saveLoading ? tCustom('saving') : tCustom('save_report')}</span>
+                    </>
+                  )}
+                </button>
+              )}
+              
+              <button
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 px-3 py-1.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-semibold shadow-sm transition"
+              >
+                <Printer className="w-3.5 h-3.5 text-slate-500" />
+                <span>{tCustom('download_pdf')}</span>
+              </button>
+
+              <button
+                onClick={() => setAiReport(null)}
+                className="p-1.5 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-600 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Document Sheet */}
+          <div className="bg-white text-slate-950 font-sans p-6 md:p-10 border border-slate-200 shadow-sm rounded-xl w-full">
+            {/* Brand Header */}
+            <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-start">
+              <div>
+                <h2 className="text-xl md:text-2xl font-bold tracking-tight text-[#1c3f24] uppercase">{user?.business_name || 'FaidaPlus Client'}</h2>
+                {user?.business_address && <p className="text-slate-600 text-[11px] mt-0.5">{user.business_address}</p>}
+                {user?.phone_number && <p className="text-slate-600 text-[11px]">{user.phone_number}</p>}
+                <p className="text-[#1c3f24] text-xs font-bold mt-2 bg-emerald-50/80 px-2 py-0.5 rounded inline-block">{aiReport.title}</p>
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-[10px] bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-full uppercase tracking-wider font-mono">AI BI ADVISOR</span>
+              </div>
+            </div>
+
+            {/* Main green header */}
+            <div className="bg-[#1c3f24] text-white p-3.5 rounded-t-lg flex justify-between items-center font-bold text-xs uppercase tracking-wider">
+              <span>{tCustom('advisory_report_header')}</span>
+              <span className="text-[10px] lowercase font-normal">{new Date(aiReport.created_at).toLocaleDateString()}</span>
+            </div>
+
+            {/* Document Body */}
+            <div className="border border-t-0 border-slate-200 p-6 md:p-8 rounded-b-lg overflow-hidden bg-white text-xs md:text-sm">
+              <div className="space-y-4 text-slate-800">
+                {parseMarkdownToJSX(aiReport.insight_text)}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="mt-8 bg-slate-50 border border-slate-200 p-4 rounded-xl flex justify-between items-center text-[11px] text-slate-600">
+              <div>
+                <p className="font-bold text-slate-800">{tCustom('general_insights')}</p>
+                <p className="text-slate-500 text-[9px] mt-0.5">Mrejesho wa FaidaPlus AI unategemea vigezo vya uendeshaji salama na weledi wa kibiashara.</p>
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-xs tracking-tight text-slate-800 uppercase">Faida<span className="text-[#00b050]">Plus</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -1163,7 +1560,7 @@ const Reports = () => {
             </div>
           </div>
 
-          {report && !loading && (
+          {report && !loading && activeTab !== 'ai' && (
             <div className="flex flex-wrap items-center gap-3 print:hidden">
               <button
                 type="button"
@@ -1280,18 +1677,32 @@ const Reports = () => {
               >
                 {tCustom('balance_sheet_subtitle')}
               </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('ai')}
+                className={`px-5 py-3 font-semibold text-sm border-b-2 whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 ${
+                  activeTab === 'ai'
+                    ? 'border-[#0284c7] text-[#0284c7] dark:text-[#38bdf8] dark:border-[#38bdf8]'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 text-[#0284c7] shrink-0" />
+                {tCustom('ai_insights_subtitle')}
+              </button>
             </div>
 
             {/* Screen active tab view */}
             <div className="print:hidden">
-              {activeTab === 'pl' ? renderProfitLoss(false) : renderBalanceSheet(false)}
+              {activeTab === 'pl' && renderProfitLoss(false)}
+              {activeTab === 'bs' && renderBalanceSheet(false)}
+              {activeTab === 'ai' && renderAIInsightsReport(false)}
             </div>
             
-            {/* Printable multi-page package view */}
-            <div className="hidden print:block space-y-12 report-paper-theme bg-white p-4 print:p-0 print:space-y-0 print:m-0 print:w-full">
-              {renderProfitLoss(true)}
-              <div className="page-break"></div>
-              {renderBalanceSheet(true)}
+            {/* Printable multi-page / single tab view */}
+            <div className="hidden print:block report-paper-theme bg-white p-4 print:p-0 print:m-0 print:w-full">
+              {activeTab === 'pl' && renderProfitLoss(true)}
+              {activeTab === 'bs' && renderBalanceSheet(true)}
+              {activeTab === 'ai' && renderAIInsightsReport(true)}
             </div>
           </div>
         ) : (

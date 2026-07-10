@@ -79,3 +79,14 @@ CREATE TABLE IF NOT EXISTS notifications (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
+
+-- Saved AI Insights / Advisory Reports
+CREATE TABLE IF NOT EXISTS saved_insights (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    insight_text TEXT NOT NULL,
+    type TEXT DEFAULT 'general',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);
