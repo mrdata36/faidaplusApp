@@ -693,7 +693,7 @@ const Reports = () => {
         setPriorReport(null);
       }
     } catch (err) {
-      if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
+      if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED' && err.response?.status !== 401) {
         setError(err.response?.data?.error || 'Unable to load report');
         console.error(err);
       }

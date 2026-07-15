@@ -73,8 +73,12 @@ const Dashboard = () => {
       setPieData(Array.isArray(pieResponse.data) ? pieResponse.data : []);
       setRecentTransactions(Array.isArray(recentResponse.data?.transactions) ? recentResponse.data.transactions : []);
     } catch (fetchError) {
-      console.error('Failed to load dashboard data:', fetchError);
-      setError('Unable to load dashboard data. Please refresh the page.');
+      if (fetchError.response?.status !== 401) {
+        console.error('Failed to load dashboard data:', fetchError);
+        setError('Unable to load dashboard data. Please refresh the page.');
+      } else {
+        console.warn('Unauthorized dashboard fetch');
+      }
     } finally {
       setLoading(false);
     }

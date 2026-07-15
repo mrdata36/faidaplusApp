@@ -9,6 +9,7 @@ import { DataSyncProvider } from './context/DataSyncContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
+import { LoadingProvider } from './context/LoadingContext';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -92,30 +93,32 @@ function App() {
   return (
     <ThemeProvider>
       <LanguageProvider>
-        <AuthProvider>
-          <DataSyncProvider>
-            <NotificationProvider>
-              <div className="App">
-                <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[var(--accent)]"></div></div>}>
-                  <RouterProvider router={router} fallbackElement={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[var(--accent)]"></div></div>} />
-                </Suspense>
+        <LoadingProvider>
+          <AuthProvider>
+            <DataSyncProvider>
+              <NotificationProvider>
+                <div className="App">
+                  <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[var(--accent)]"></div></div>}>
+                    <RouterProvider router={router} fallbackElement={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[var(--accent)]"></div></div>} />
+                  </Suspense>
 
-                {/* Toast notifications */}
-                <ToastContainer
-                  position="top-right"
-                  autoClose={5000}
-                  hideProgressBar={false}
-                  newestOnTop
-                  closeOnClick
-                  rtl={false}
-                  pauseOnFocusLoss
-                  draggable
-                  pauseOnHover
-                />
-              </div>
-            </NotificationProvider>
-          </DataSyncProvider>
-        </AuthProvider>
+                  {/* Toast notifications */}
+                  <ToastContainer
+                    position="top-right"
+                    autoClose={5000}
+                    hideProgressBar={false}
+                    newestOnTop
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                  />
+                </div>
+              </NotificationProvider>
+            </DataSyncProvider>
+          </AuthProvider>
+        </LoadingProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

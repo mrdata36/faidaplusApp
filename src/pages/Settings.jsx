@@ -121,7 +121,9 @@ const Settings = () => {
         }
       }
     } catch (err) {
-      console.error(err);
+      if (err.response?.status !== 401) {
+        console.error(err);
+      }
     } finally {
       setLoading(false);
     }

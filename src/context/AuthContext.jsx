@@ -43,6 +43,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post('/api/auth/login', { email, password });
       if (res.data.token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        localStorage.setItem('token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user || null);
         return { success: true };
@@ -58,6 +60,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post('/api/auth/register', userData);
       if (res.data.token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        localStorage.setItem('token', res.data.token);
         setToken(res.data.token);
         setUser(res.data.user || null);
         return { success: true };
@@ -73,7 +77,36 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
   };
+
+  useEffect(() => {
+    const reqInterceptor = axios.interceptors.request.use(
+      (config) => {
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+          config.headers['Authorization'] = `Bearer ${storedToken}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    const resInterceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          logout();
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.request.eject(reqInterceptor);
+      axios.interceptors.response.eject(resInterceptor);
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, token, loading, login, register, logout, isAuthenticated: !!user }}>

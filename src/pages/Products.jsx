@@ -68,7 +68,7 @@ const Products = () => {
       const response = await axios.get('/api/products', { signal });
       setProducts(response.data.products);
     } catch (err) {
-      if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED') {
+      if (err.name !== 'CanceledError' && err.code !== 'ERR_CANCELED' && err.response?.status !== 401) {
         console.error(err);
       }
     } finally {

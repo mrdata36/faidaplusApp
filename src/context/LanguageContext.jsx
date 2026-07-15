@@ -74,6 +74,7 @@ const translations = {
     are_you_sure_title: 'Are you sure?',
     search: 'Search',
     loading: 'Loading...',
+    please_wait: 'Please wait a moment...',
     all: 'All',
 
     // Transaction Categories
@@ -308,6 +309,7 @@ const translations = {
     are_you_sure_title: 'Je, una uhakika?',
     search: 'Tafuta',
     loading: 'Inapakia...',
+    please_wait: 'Tafadhali subiri kidogo...',
     all: 'Zote',
 
     // Transaction Categories

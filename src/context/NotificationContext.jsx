@@ -21,7 +21,11 @@ export const NotificationProvider = ({ children }) => {
       const count = list.filter(n => !n.is_read && n.is_read !== 1).length;
       setUnreadCount(count);
     } catch (err) {
-      console.error('Error fetching notifications:', err);
+      if (err.response?.status !== 401) {
+        console.error('Error fetching notifications:', err);
+      } else {
+        console.warn('Unauthorized notifications fetch');
+      }
     }
   }, [user]);
 
