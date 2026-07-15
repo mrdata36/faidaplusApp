@@ -47,9 +47,9 @@ export const AuthProvider = ({ children }) => {
         setUser(res.data.user || null);
         return { success: true };
       }
-      return { success: false, error: 'Invalid response from server' };
+      return { success: false, error: 'Invalid response from server. Please check the backend or network connection.' };
     } catch (err) {
-      const errMsg = err.response?.data?.error || err.response?.data?.message || 'Login failed';
+      const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Login failed';
       return { success: false, error: errMsg };
     }
   };
@@ -62,9 +62,9 @@ export const AuthProvider = ({ children }) => {
         setUser(res.data.user || null);
         return { success: true };
       }
-      return { success: false, error: 'Invalid response from server' };
+      return { success: false, error: 'Invalid response from server. Please check the backend or network connection.' };
     } catch (err) {
-      const errMsg = err.response?.data?.error || err.response?.data?.message || 'Registration failed';
+      const errMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Registration failed';
       return { success: false, error: errMsg };
     }
   };

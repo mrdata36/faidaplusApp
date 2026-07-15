@@ -4,15 +4,17 @@ const { GoogleGenAI } = require('@google/genai');
 const { Pool } = require('pg');
 const db = require('../db/database');
 
-// Initialize Gemini Client
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-  httpOptions: {
-    headers: {
-      'User-Agent': 'aistudio-build',
-    }
-  }
-});
+// Initialize Gemini Client only when a key exists
+const ai = process.env.GEMINI_API_KEY
+  ? new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      httpOptions: {
+        headers: {
+          'User-Agent': 'aistudio-build',
+        }
+      }
+    })
+  : null;
 
 // Promise helpers for clean async database operations
 const dbGet = (sql, params) => {
@@ -329,6 +331,9 @@ router.get('/insights', async (req, res) => {
     }
 
     try {
+      if (!ai) {
+        throw new Error('Gemini API key not configured');
+      }
       const response = await ai.models.generateContent({
         model: 'gemini-3.5-flash',
         contents: prompt,

@@ -247,15 +247,24 @@ textarea::placeholder {
 
 /* Custom sidebar override classes to preserve colors under light/dark overrides */
 .sidebar-bg {
+  background-color: var(--surface) !important;
+}
+.dark .sidebar-bg {
   background-color: #0f172a !important;
 }
 .sidebar-text {
+  color: var(--text-secondary) !important;
+}
+.dark .sidebar-text {
   color: #94a3b8 !important;
 }
 .sidebar-border {
-  border-color: #1e293b !important;
+  border-color: var(--border) !important;
 }
 .sidebar-bg-hover:hover {
+  background-color: rgba(15, 23, 42, 0.08) !important;
+}
+.dark .sidebar-bg-hover:hover {
   background-color: #1e293b !important;
 }
 

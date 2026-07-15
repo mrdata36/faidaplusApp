@@ -61,7 +61,7 @@ const Login = () => {
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-brand-bluecola via-brand-trueblue to-brand-absolutezero items-center justify-center p-12">
         <div className="text-center text-white max-w-md">
           <div className="flex items-center justify-center mb-8">
-            <img src="/favicon.svg" alt="FaidaPlus logo" className="w-16 h-16 mr-4" />
+            <img src="/icons/icon-192.png" alt="FaidaPlus logo" className="w-16 h-16 mr-4 rounded-2xl shadow-lg shadow-blue-600/10" />
             <h1 className="text-5xl font-display font-bold">FaidaPlus</h1>
           </div>
           <p className="text-xl opacity-90 mb-6 font-medium">
@@ -78,8 +78,8 @@ const Login = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="lg:hidden flex items-center justify-center mb-6">
-              <img src="/favicon.svg" alt="FaidaPlus logo" className="w-12 h-12 mr-3" />
-              <h1 className="text-3xl font-display font-bold text-brand-bluecola">FaidaPlus</h1>
+              <img src="/icons/icon-192.png" alt="FaidaPlus logo" className="w-12 h-12 mr-3 rounded-xl shadow-md shadow-blue-600/10" />
+              <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white">FaidaPlus</h1>
             </div>
             <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-slate-100 mb-2">
               {t('sign_in')}

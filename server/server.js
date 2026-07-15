@@ -11,10 +11,11 @@ const app = express();
 const PORT = process.env.NODE_ENV === 'production' ? (process.env.PORT || 3000) : 5000;
 
 // Middleware
+const corsOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+  : null;
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? process.env.CORS_ORIGINS?.split(',') || []
-    : true,
+  origin: corsOrigins || true,
   credentials: true,
 };
 app.use(cors(corsOptions));

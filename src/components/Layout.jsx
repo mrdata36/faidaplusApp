@@ -51,8 +51,8 @@ const Layout = ({ children }) => {
             <span className="text-white font-bold text-lg">F</span>
           </div>
           <div>
-            <h1 className="text-white font-semibold text-lg tracking-tight leading-none">Faida Plus</h1>
-            <span className="text-[10px] text-slate-500 font-medium tracking-wider uppercase">{t('enterprise_view')}</span>
+            <h1 className="text-slate-900 dark:text-white font-semibold text-lg tracking-tight leading-none">Faida Plus</h1>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">{t('enterprise_view')}</span>
           </div>
         </div>
 
@@ -89,19 +89,19 @@ const Layout = ({ children }) => {
         </nav>
 
         {/* Desktop Profile / Footer */}
-        <div className="p-4 sidebar-border border-t bg-slate-950/30 flex flex-col gap-3">
+        <div className="p-4 sidebar-border border-t bg-slate-100 dark:bg-slate-950/30 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-lg bg-slate-800 flex items-center justify-center text-white font-semibold shrink-0">
+            <div className="h-9 w-9 rounded-lg bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-white font-semibold shrink-0">
               {user?.full_name?.charAt(0).toUpperCase() || <User className="h-4 w-4 text-slate-400" />}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate leading-none mb-1">{user?.full_name || 'Admin User'}</p>
-              <p className="text-[11px] text-slate-500 truncate">{user?.business_name || 'Business Manager'}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate leading-none mb-1">{user?.full_name || 'Admin User'}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{user?.business_name || 'Business Manager'}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-800/50 hover:bg-red-950/40 hover:text-red-400 p-2 text-xs font-semibold text-slate-300 transition duration-200"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-red-950/40 hover:text-slate-900 dark:hover:text-red-400 p-2 text-xs font-semibold text-slate-700 dark:text-slate-300 transition duration-200"
           >
             <LogOut className="h-3.5 w-3.5" />
             {t('logout')}
@@ -195,36 +195,36 @@ const Layout = ({ children }) => {
       )}
 
       <div
-        className={`fixed left-0 top-0 z-50 h-full w-72 overflow-y-auto sidebar-bg text-white shadow-2xl transition-transform duration-300 lg:hidden ${
+        className={`fixed left-0 top-0 z-50 h-full w-72 overflow-y-auto sidebar-bg text-slate-900 dark:text-white shadow-2xl transition-transform duration-300 lg:hidden ${
           drawerOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-base">F</span>
             </div>
             <div>
-              <h1 className="text-base font-bold text-white leading-none">FaidaPlus</h1>
-              <span className="text-[10px] text-slate-500">{t('business_control_panel')}</span>
+              <h1 className="text-base font-bold text-slate-900 dark:text-white leading-none">FaidaPlus</h1>
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">{t('business_control_panel')}</span>
             </div>
           </div>
-          <button onClick={() => setDrawerOpen(false)} className="text-slate-400 hover:text-white transition p-1">
+          <button onClick={() => setDrawerOpen(false)} className="text-slate-500 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition p-1">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="bg-slate-900/50 px-6 py-4 border-b border-slate-800 flex items-center justify-between">
+        <div className="bg-slate-100 dark:bg-slate-900/50 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
           <div>
-            <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold block mb-1">{t('active_workspace')}</span>
-            <span className="text-sm font-semibold text-white truncate max-w-[180px] block">{user?.business_name || 'Workspace'}</span>
+            <span className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-slate-400 font-bold block mb-1">{t('active_workspace')}</span>
+            <span className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[180px] block">{user?.business_name || 'Workspace'}</span>
           </div>
           {/* Mobile language switch inside drawer header */}
           <button
             onClick={() => changeLanguage(language === 'en' ? 'sw' : 'en')}
-            className="flex items-center gap-1 bg-slate-800 px-2.5 py-1 rounded-lg text-xs font-bold text-white border border-slate-700"
+            className="flex items-center gap-1 bg-slate-200 dark:bg-slate-800 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700"
           >
             <Globe className="h-3.5 w-3.5 text-blue-400" />
             <span>{language === 'en' ? 'EN' : 'SW'}</span>
@@ -252,9 +252,9 @@ const Layout = ({ children }) => {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800 absolute bottom-0 left-0 right-0 bg-slate-950">
+        <div className="p-4 border-t border-slate-200 dark:border-slate-800 absolute bottom-0 left-0 right-0 bg-slate-100 dark:bg-slate-950">
           <div className="mb-4 px-2">
-            <p className="text-xs text-slate-400">👤 {user?.full_name || 'User Account'}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400">👤 {user?.full_name || 'User Account'}</p>
           </div>
           <button
             onClick={() => {

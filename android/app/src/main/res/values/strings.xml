@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FaidaPlus</string>
+    <string name="title_activity_main">FaidaPlus</string>
+    <string name="package_name">com.faida.app</string>
+    <string name="custom_url_scheme">com.faida.app</string>
+</resources>
